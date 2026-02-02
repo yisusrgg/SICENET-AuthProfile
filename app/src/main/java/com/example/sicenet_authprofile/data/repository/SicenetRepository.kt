@@ -1,5 +1,6 @@
 package com.example.sicenet_authprofile.data.repository
 
+import android.content.Context
 import com.example.sicenet_authprofile.data.model.LoginResponse
 import com.example.sicenet_authprofile.data.model.UserProfile
 import com.example.sicenet_authprofile.data.network.SicenetService
@@ -12,9 +13,13 @@ import org.json.JSONObject
 interface SicenetRepository {
     suspend fun login(user: String, password: String): LoginResponse
     suspend fun getUserProfile(cookie: String): UserProfile?
+    fun clearSession()
 }
 
-class SicenetRepositoryImpl(private val sicenetService: SicenetService) : SicenetRepository {
+class SicenetRepositoryImpl(
+    private val sicenetService: SicenetService,
+    private val context: Context
+) : SicenetRepository {
 
     override suspend fun login(user: String, password: String): LoginResponse {
         return try {
@@ -60,6 +65,13 @@ class SicenetRepositoryImpl(private val sicenetService: SicenetService) : Sicene
         }
     }
 
+    override fun clearSession() {
+        context.getSharedPreferences("PREFS", Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .apply() //.commit() //.apply()
+    }
+
     private fun extractTagValue(xml: String, tag: String): String? {
         val openTag = "<$tag>"
         val closeTag = "</$tag>"
@@ -73,5 +85,7 @@ class SicenetRepositoryImpl(private val sicenetService: SicenetService) : Sicene
         }
     }
 }
+
+
 
 

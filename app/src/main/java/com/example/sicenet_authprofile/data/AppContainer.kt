@@ -33,6 +33,6 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
     }
 
     override val sicenetRepository: SicenetRepository by lazy {
-        SicenetRepositoryImpl(retrofitService)
+        SicenetRepositoryImpl(retrofitService, context)
     }
 }

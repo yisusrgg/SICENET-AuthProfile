@@ -63,6 +63,8 @@ class SicenetViewModel(
     
     fun resetLoginState() {
         _loginState.value = LoginUiState.Idle
+        _profileState.value = ProfileUiState.Loading
+        repository.clearSession()
     }
 
     companion object {

@@ -6,6 +6,7 @@ import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
 import java.io.IOException
+import androidx.core.content.edit
 
 class AddCookiesInterceptor(private val context: Context) : Interceptor {
     @Throws(IOException::class)
@@ -13,7 +14,8 @@ class AddCookiesInterceptor(private val context: Context) : Interceptor {
         val builder: Request.Builder = chain.request().newBuilder()
         val preferences = context.getSharedPreferences("PREFS", Context.MODE_PRIVATE)
             .getStringSet("PREF_COOKIES", HashSet()) as HashSet<String>?
-        
+//            .getStringSet("PREF_COOKIES", null)
+
         preferences?.forEach { cookie ->
             builder.addHeader("Cookie", cookie)
         }
@@ -26,16 +28,18 @@ class ReceivedCookiesInterceptor(private val context: Context) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalResponse: Response = chain.proceed(chain.request())
         if (originalResponse.headers("Set-Cookie").isNotEmpty()) {
-            val cookies = context.getSharedPreferences("PREFS", Context.MODE_PRIVATE)
-                .getStringSet("PREF_COOKIES", HashSet())?.toMutableSet() ?: mutableSetOf()
-            
+//            val cookies = context.getSharedPreferences("PREFS", Context.MODE_PRIVATE)
+//                .getStringSet("PREF_COOKIES", HashSet())?.toMutableSet() ?: mutableSetOf()
+            val cookies = mutableSetOf<String>()
+
             for (header in originalResponse.headers("Set-Cookie")) {
                 cookies.add(header)
             }
             
-            context.getSharedPreferences("PREFS", Context.MODE_PRIVATE).edit()
-                .putStringSet("PREF_COOKIES", cookies)
-                .apply()
+            context.getSharedPreferences("PREFS", Context.MODE_PRIVATE).edit(commit = true) {
+                clear()
+                    .putStringSet("PREF_COOKIES", cookies)
+            }  //.apply()
         }
         return originalResponse
     }
