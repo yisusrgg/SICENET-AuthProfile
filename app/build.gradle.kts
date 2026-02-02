@@ -49,7 +49,10 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    // OkHttp for SOAP requests
+    
+    // Retrofit & XML
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.simplexml)
     implementation(libs.okhttp)
 
     testImplementation(libs.junit)

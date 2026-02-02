@@ -1,10 +1,14 @@
 package com.example.sicenet_authprofile.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.sicenet_authprofile.SicenetApplication
 import com.example.sicenet_authprofile.data.model.UserProfile
 import com.example.sicenet_authprofile.data.repository.SicenetRepository
-import com.example.sicenet_authprofile.data.repository.SicenetRepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +28,7 @@ sealed class ProfileUiState {
 }
 
 class SicenetViewModel(
-    private val repository: SicenetRepository = SicenetRepositoryImpl()
+    private val repository: SicenetRepository
 ) : ViewModel() {
 
     private val _loginState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
@@ -59,5 +63,15 @@ class SicenetViewModel(
     
     fun resetLoginState() {
         _loginState.value = LoginUiState.Idle
+    }
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val application = (this[APPLICATION_KEY] as SicenetApplication)
+                val sicenetRepository = application.container.sicenetRepository
+                SicenetViewModel(repository = sicenetRepository)
+            }
+        }
     }
 }

@@ -22,7 +22,6 @@ fun LoginScreen(
     LaunchedEffect(loginState) {
         if (loginState is LoginUiState.Success) {
             onLoginSuccess((loginState as LoginUiState.Success).cookie)
-            viewModel.resetLoginState()
         }
     }
 
@@ -39,7 +38,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = user,
             onValueChange = { user = it },
-            label = { Text("Usuario") },
+            label = { Text("Matrícula") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))

@@ -5,7 +5,6 @@ data class LoginResponse(
     val cookie: String? = null,
     val message: String? = null
 )
-
 data class UserProfile(
     val nombre: String = "",
     val matricula: String = "",
