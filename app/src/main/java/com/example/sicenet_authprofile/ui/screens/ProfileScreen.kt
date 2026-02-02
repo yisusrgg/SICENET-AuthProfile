@@ -7,7 +7,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.sicenet_authprofile.data.model.UserProfile
 import com.example.sicenet_authprofile.ui.viewmodels.ProfileUiState
 import com.example.sicenet_authprofile.ui.viewmodels.SicenetViewModel
 
@@ -43,11 +42,19 @@ fun ProfileScreen(
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        ProfileItem(label = "Nombre", value = state.profile.nombre)
-                        ProfileItem(label = "Matrícula", value = state.profile.matricula)
-                        ProfileItem(label = "Carrera", value = state.profile.carrera)
-                        ProfileItem(label = "Situación", value = state.profile.situacion)
-                        ProfileItem(label = "Promedio", value = state.profile.promedio)
+                        ProfileItem("Nombre", state.profile.nombre)
+                        ProfileItem("Matrícula", state.profile.matricula)
+                        ProfileItem("Carrera", state.profile.carrera)
+                        ProfileItem("Especialidad", state.profile.especialidad)
+                        ProfileItem("Semestre actual", state.profile.semActual.toString())
+                        ProfileItem("Créditos acumulados", state.profile.cdtosAcumulados.toString())
+                        ProfileItem("Créditos actuales", state.profile.cdtosActuales.toString())
+                        ProfileItem("Estatus", state.profile.estatus)
+                        ProfileItem("Inscrito", if (state.profile.inscrito) "Sí" else "No")
+                        ProfileItem("Adeudo", if (state.profile.adeudo) "Sí" else "No")
+                        ProfileItem("Fecha reinscripción", state.profile.fechaReins)
+                        ProfileItem("Modalidad educativa", state.profile.modEducativo.toString())
+                        ProfileItem("Lineamiento", state.profile.lineamiento.toString())
                     }
                 }
             }

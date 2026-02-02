@@ -2,6 +2,7 @@ package com.example.sicenet_authprofile.data.repository
 
 import android.content.Context
 import com.example.sicenet_authprofile.data.model.LoginResponse
+import com.example.sicenet_authprofile.data.model.PerfilAcademico
 import com.example.sicenet_authprofile.data.model.UserProfile
 import com.example.sicenet_authprofile.data.network.SicenetService
 import com.example.sicenet_authprofile.data.network.loginSoapTemplate
@@ -12,7 +13,7 @@ import org.json.JSONObject
 
 interface SicenetRepository {
     suspend fun login(user: String, password: String): LoginResponse
-    suspend fun getUserProfile(cookie: String): UserProfile?
+    suspend fun getUserProfile(cookie: String): PerfilAcademico?
     fun clearSession()
 }
 
@@ -40,7 +41,8 @@ class SicenetRepositoryImpl(
         }
     }
 
-    override suspend fun getUserProfile(cookie: String): UserProfile? {
+    override suspend fun getUserProfile(cookie: String): PerfilAcademico? {
+
         return try {
             val requestBody = profileSoapRequest.toRequestBody("text/xml; charset=utf-8".toMediaType())
             val response = sicenetService.getProfile(requestBody)
@@ -50,12 +52,22 @@ class SicenetRepositoryImpl(
 
             if (jsonResult != null) {
                 val json = JSONObject(jsonResult)
-                UserProfile(
-                    nombre = json.optString("nombre", ""),
-                    matricula = json.optString("matricula", ""),
-                    carrera = json.optString("carrera", ""),
-                    situacion = json.optString("situacion", ""),
-                    promedio = json.optString("promedio", "")
+                PerfilAcademico(
+                    fechaReins = json.optString("fechaReins"),
+                    modEducativo = json.optInt("modEducativo"),
+                    adeudo = json.optBoolean("adeudo"),
+                    urlFoto = json.optString("urlFoto"),
+                    adeudoDescripcion = json.optString("adeudoDescripcion"),
+                    inscrito = json.optBoolean("inscrito"),
+                    estatus = json.optString("estatus"),
+                    semActual = json.optInt("semActual"),
+                    cdtosAcumulados = json.optInt("cdtosAcumulados"),
+                    cdtosActuales = json.optInt("cdtosActuales"),
+                    especialidad = json.optString("especialidad"),
+                    carrera = json.optString("carrera"),
+                    lineamiento = json.optInt("lineamiento"),
+                    nombre = json.optString("nombre"),
+                    matricula = json.optString("matricula")
                 )
             } else {
                 null

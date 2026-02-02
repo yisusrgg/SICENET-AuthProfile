@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import com.example.sicenet_authprofile.data.model.PerfilAcademico
+
 
 sealed class LoginUiState {
     object Idle : LoginUiState()
@@ -23,7 +25,7 @@ sealed class LoginUiState {
 
 sealed class ProfileUiState {
     object Loading : ProfileUiState()
-    data class Success(val profile: UserProfile) : ProfileUiState()
+    data class Success(val profile: PerfilAcademico) : ProfileUiState()
     data class Error(val message: String) : ProfileUiState()
 }
 
