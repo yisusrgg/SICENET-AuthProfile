@@ -8,13 +8,13 @@ import okhttp3.Response
 import java.io.IOException
 import androidx.core.content.edit
 
+//OBTENER LOS DATOS DEL USARIO AUTENTICADO
 class AddCookiesInterceptor(private val context: Context) : Interceptor {
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {
         val builder: Request.Builder = chain.request().newBuilder()
         val preferences = context.getSharedPreferences("PREFS", Context.MODE_PRIVATE)
             .getStringSet("PREF_COOKIES", HashSet()) as HashSet<String>?
-//            .getStringSet("PREF_COOKIES", null)
 
         preferences?.forEach { cookie ->
             builder.addHeader("Cookie", cookie)
@@ -23,6 +23,7 @@ class AddCookiesInterceptor(private val context: Context) : Interceptor {
     }
 }
 
+//OBTENER LA SESION (COOKIE) DE UN USUARIO
 class ReceivedCookiesInterceptor(private val context: Context) : Interceptor {
     @Throws(IOException::class)
     override fun intercept(chain: Interceptor.Chain): Response {

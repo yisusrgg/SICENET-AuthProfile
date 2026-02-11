@@ -1,6 +1,7 @@
 package com.example.sicenet_authprofile.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.example.sicenet_authprofile.data.model.LoginResponse
 import com.example.sicenet_authprofile.data.model.PerfilAcademico
 import com.example.sicenet_authprofile.data.model.UserProfile
@@ -23,33 +24,47 @@ class SicenetRepositoryImpl(
 ) : SicenetRepository {
 
     override suspend fun login(user: String, password: String): LoginResponse {
-        return try {
-            val soapBody = loginSoapTemplate.format(user, password)
-            val requestBody = soapBody.toRequestBody("text/xml; charset=utf-8".toMediaType())
-            val response = sicenetService.login(requestBody)
-            val responseString = response.string()
-
-            val result = extractTagValue(responseString, "accesoLoginResult")
-
-            if (result != null && result.contains("\"acceso\":true", ignoreCase = true)) {
-                LoginResponse(true, "Cookie stored by interceptor", "Login exitoso")
-            } else {
-                LoginResponse(false, null, "Credenciales incorrectas o error de servicio")
+        var retryCount = 0
+        val max = 3
+        while (max > retryCount) {
+            try{
+                val soapBody = loginSoapTemplate.format(user, password)
+                val requestBody = soapBody.toRequestBody("text/xml; charset=utf-8".toMediaType())
+                val response = sicenetService.login(requestBody)
+                val responseString = response.string()
+                val result = extractTagValue(responseString, "accesoLoginResult")
+                /*
+                Log.d("SICENET_Envio", "XML enviado: $soapBody")
+                //Log.d("SICENET_DEBUG:, $responseString") Wj8-f_E5
+                println("Verificando respuesta: $responseString")
+                println("RESULTRepo: $result")
+                */
+                if (!responseString.trim().startsWith("<html>")) {
+                    return if (result != null && result.contains("\"acceso\":true", ignoreCase = true)
+                    ) {
+                        LoginResponse(true, "Cookie stored by interceptor", "Login exitoso")
+                    } else {
+                        LoginResponse(false, null, "Credenciales incorrectas o error de servicio")
+                    }
+                }
+                retryCount++;
+                kotlinx.coroutines.delay(50)
+            } catch (e: Exception) {
+                retryCount++;
+                if (retryCount >= max) return LoginResponse(false, null, e.message ?: "Error de red")
             }
-        } catch (e: Exception) {
-            LoginResponse(false, null, e.message ?: "Error de red")
         }
+        return LoginResponse(false, null, "El servidor no responde correctamente tras varios intentos")
     }
 
     override suspend fun getUserProfile(cookie: String): PerfilAcademico? {
-
         return try {
             val requestBody = profileSoapRequest.toRequestBody("text/xml; charset=utf-8".toMediaType())
             val response = sicenetService.getProfile(requestBody)
             val responseString = response.string()
             
             val jsonResult = extractTagValue(responseString, "getAlumnoAcademicoWithLineamientoResult")
-
+            println("body perfil: $jsonResult")
             if (jsonResult != null) {
                 val json = JSONObject(jsonResult)
                 PerfilAcademico(
@@ -81,7 +96,7 @@ class SicenetRepositoryImpl(
         context.getSharedPreferences("PREFS", Context.MODE_PRIVATE)
             .edit()
             .clear()
-            .apply() //.commit() //.apply()
+            .apply() //.commit()
     }
 
     private fun extractTagValue(xml: String, tag: String): String? {

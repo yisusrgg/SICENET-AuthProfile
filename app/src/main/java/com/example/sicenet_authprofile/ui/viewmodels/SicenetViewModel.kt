@@ -43,6 +43,7 @@ class SicenetViewModel(
         viewModelScope.launch {
             _loginState.value = LoginUiState.Loading
             val result = repository.login(user, pass)
+            println("Result de VM: $result")
             if (result.success && result.cookie != null) {
                 _loginState.value = LoginUiState.Success(result.cookie)
             } else {
