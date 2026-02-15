@@ -81,7 +81,7 @@ val califFinalRequest = """
     <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
       <soap:Body>
         <getAllCalifFinalByAlumnos xmlns="http://tempuri.org/">
-          <bytModEducativo>unsignedByte</bytModEducativo>
+          <bytModEducativo>%s</bytModEducativo>
         </getAllCalifFinalByAlumnos>
       </soap:Body>
     </soap:Envelope>
@@ -99,7 +99,7 @@ val cardexRequest = """
     <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
       <soap:Body>
         <getAllKardexConPromedioByAlumno xmlns="http://tempuri.org/">
-          <aluLineamiento>unsignedByte</aluLineamiento>
+          <aluLineamiento>%s</aluLineamiento>
         </getAllKardexConPromedioByAlumno>
       </soap:Body>
     </soap:Envelope>
