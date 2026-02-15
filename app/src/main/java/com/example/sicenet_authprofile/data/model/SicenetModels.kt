@@ -29,3 +29,5 @@ data class PerfilAcademico(
     val nombre: String,
     val matricula: String
 )
+
+

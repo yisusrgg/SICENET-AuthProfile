@@ -6,20 +6,21 @@ import com.example.sicenet_authprofile.data.model.LoginResponse
 import com.example.sicenet_authprofile.data.model.PerfilAcademico
 import com.example.sicenet_authprofile.data.model.UserProfile
 import com.example.sicenet_authprofile.data.network.SicenetService
+import com.example.sicenet_authprofile.data.network.cargaAcademicaRequest
 import com.example.sicenet_authprofile.data.network.loginSoapTemplate
 import com.example.sicenet_authprofile.data.network.profileSoapRequest
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
+import retrofit2.HttpException
+import java.io.IOException
+
 interface SicenetRepository {
     suspend fun login(user: String, password: String): LoginResponse
     suspend fun getUserProfile(cookie: String): PerfilAcademico?
     fun clearSession()
     suspend fun getCargaAcademica(): String?
-    suspend fun getKardex(lineamiento: String): String? // El kardex suele pedir lineamiento
-    suspend fun getCalifUnidades(): String?
-    suspend fun getCalifFinal(): String?
 }
 
 class SicenetRepositoryImpl(
@@ -87,6 +88,20 @@ class SicenetRepositoryImpl(
                 null
             }
         } catch (e: Exception) {
+            null
+        }
+    }
+
+    override suspend fun getCargaAcademica(): String? {
+        return try {
+            val requestBody = cargaAcademicaRequest.toRequestBody("text/xml; charset=utf-8".toMediaType())
+            val response = sicenetService.getCargaAcademica(requestBody)
+            val responseString = response.string()
+            Log.d("SICENET_RES", "Respuesta Servidor: $responseString")
+            val jsonResult = extractTagValue(responseString, "getCargaAcademicaByAlumnoResult")
+            jsonResult
+
+        } catch (e: HttpException) {
             null
         }
     }

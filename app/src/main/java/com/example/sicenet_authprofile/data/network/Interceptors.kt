@@ -29,18 +29,22 @@ class ReceivedCookiesInterceptor(private val context: Context) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalResponse: Response = chain.proceed(chain.request())
         if (originalResponse.headers("Set-Cookie").isNotEmpty()) {
-//            val cookies = context.getSharedPreferences("PREFS", Context.MODE_PRIVATE)
-//                .getStringSet("PREF_COOKIES", HashSet())?.toMutableSet() ?: mutableSetOf()
-            val cookies = mutableSetOf<String>()
+            val sharedPrefs = context.getSharedPreferences("PREFS", Context.MODE_PRIVATE)
+            //Recuperar las cookies que ya existian
+            val currentCookies = sharedPrefs.getStringSet("PREF_COOKIES", HashSet())?.toMutableSet() ?: mutableSetOf()
 
+            //Agregar las nuevas del servidor
             for (header in originalResponse.headers("Set-Cookie")) {
-                cookies.add(header)
+                currentCookies.add(header)
             }
-            
-            context.getSharedPreferences("PREFS", Context.MODE_PRIVATE).edit(commit = true) {
-                clear()
-                    .putStringSet("PREF_COOKIES", cookies)
+
+            sharedPrefs.edit(commit = true) {
+                putStringSet("PREF_COOKIES", currentCookies)
             }
+            //context.getSharedPreferences("PREFS", Context.MODE_PRIVATE).edit(commit = true) {
+            //    clear()
+             //       .putStringSet("PREF_COOKIES", cookies)
+            //}
         }
         return originalResponse
     }

@@ -79,4 +79,18 @@ class SicenetViewModel(
             }
         }
     }
+
+
+    fun probarConexion() {
+        viewModelScope.launch {
+            println("--- INICIANDO PRUEBA DE CONEXIÓN ---")
+
+
+            // Asumiendo que ya estás logueado y tienes cookies
+            val carga = repository.getCargaAcademica()
+            println("RESPUESTA CARGA: $carga")
+
+            println("--- FIN PRUEBA ---")
+        }
+    }
 }
