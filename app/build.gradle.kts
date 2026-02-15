@@ -44,9 +44,10 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    
+
     // Navigation
     implementation(libs.androidx.navigation.compose)
+    implementation("androidx.navigation:navigation-compose:2.9.7")
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     
@@ -54,6 +55,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.simplexml)
     implementation(libs.okhttp)
+    implementation(libs.androidx.compose.runtime.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

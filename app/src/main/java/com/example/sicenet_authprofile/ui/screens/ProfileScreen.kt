@@ -20,9 +20,12 @@ fun ProfileScreen(
 ) {
     val profileState by viewModel.profileState.collectAsState()
 
-    LaunchedEffect(Unit) {
-        viewModel.getProfile(cookie)
+    LaunchedEffect(profileState) {
+        if (profileState !is ProfileUiState.Success) {
+            viewModel.getProfile(cookie)
+        }
     }
+
 
     Column(
         modifier = Modifier
