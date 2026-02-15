@@ -121,7 +121,9 @@ fun HomeScreen(
             }
 
             composable("cardex") {
-                CardexScreen()
+                CardexScreen(
+                    viewModel = viewModel
+                )
             }
 
             composable("unidad") {

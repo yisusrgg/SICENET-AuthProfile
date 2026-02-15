@@ -29,5 +29,11 @@ data class PerfilAcademico(
     val nombre: String,
     val matricula: String
 )
+data class MateriaKardex(
+    val clave: String,
+    val nombre: String,
+    val calificacion: String,
+    val semestre: String
+)
 
 

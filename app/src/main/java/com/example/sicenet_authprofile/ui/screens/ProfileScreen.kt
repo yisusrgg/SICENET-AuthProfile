@@ -84,10 +84,8 @@ fun ProfileScreen(
             Button(onClick = onLogout) {
                 Text("Cerrar Sesión")
             }
-            Button(
-                onClick = { viewModel.probarConexion() }
-            ) {
-                Text("Probar conexion")
+            Button(onClick = onLogout) {
+                Text("Cerrar Sesión")
             }
         }
     }

@@ -23,7 +23,7 @@ fun MainScreen(navController: NavHostController, cookie: String, viewModel: Sice
             composable("informacion") { ProfileScreen(viewModel, cookie, onLogout = {
                 navController.navigate("login") { popUpTo(0) }
             }) }
-            composable("cardex") { CardexScreen() }
+            composable("cardex") { CardexScreen(viewModel) }
             composable("calificaciones") { CalificacionesUnidadScreen() }
             composable("final") { CalificacionFinalScreen() }
         }

@@ -7,14 +7,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.sicenet_authprofile.SicenetApplication
-import com.example.sicenet_authprofile.data.model.UserProfile
+import com.example.sicenet_authprofile.data.model.MateriaKardex
+import com.example.sicenet_authprofile.data.model.PerfilAcademico
 import com.example.sicenet_authprofile.data.repository.SicenetRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import com.example.sicenet_authprofile.data.model.PerfilAcademico
-
 
 sealed class LoginUiState {
     object Idle : LoginUiState()
@@ -29,6 +28,12 @@ sealed class ProfileUiState {
     data class Error(val message: String) : ProfileUiState()
 }
 
+sealed class CardexUiState {
+    object Loading : CardexUiState()
+    data class Success(val materias: List<MateriaKardex>) : CardexUiState()
+    data class Error(val message: String) : CardexUiState()
+}
+
 class SicenetViewModel(
     private val repository: SicenetRepository
 ) : ViewModel() {
@@ -39,13 +44,16 @@ class SicenetViewModel(
     private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 
+    private val _cardexState = MutableStateFlow<CardexUiState>(CardexUiState.Loading)
+    val cardexState: StateFlow<CardexUiState> = _cardexState.asStateFlow()
+
     fun login(user: String, pass: String) {
         viewModelScope.launch {
             _loginState.value = LoginUiState.Loading
             val result = repository.login(user, pass)
-            println("Result de VM: $result")
-            if (result.success && result.cookie != null) {
-                _loginState.value = LoginUiState.Success(result.cookie)
+            if (result.success) {
+                // La cookie ya está en SessionManager, aquí solo notificamos éxito
+                _loginState.value = LoginUiState.Success("OK")
             } else {
                 _loginState.value = LoginUiState.Error(result.message ?: "Error desconocido")
             }
@@ -63,12 +71,30 @@ class SicenetViewModel(
             }
         }
     }
-    
+
+    fun getCardex(lineamiento: String) {
+        viewModelScope.launch {
+            _cardexState.value = CardexUiState.Loading
+            try {
+                val resultado = repository.getKardex(lineamiento)
+                if (resultado != null && resultado.isNotEmpty()) {
+                    _cardexState.value = CardexUiState.Success(resultado)
+                } else {
+                    _cardexState.value = CardexUiState.Error("No se encontraron materias")
+                }
+            } catch (e: Exception) {
+                _cardexState.value = CardexUiState.Error("Error: ${e.message}")
+            }
+        }
+    }
+
     fun resetLoginState() {
         _loginState.value = LoginUiState.Idle
         _profileState.value = ProfileUiState.Loading
+        _cardexState.value = CardexUiState.Loading
         repository.clearSession()
     }
+
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
@@ -77,20 +103,6 @@ class SicenetViewModel(
                 val sicenetRepository = application.container.sicenetRepository
                 SicenetViewModel(repository = sicenetRepository)
             }
-        }
-    }
-
-
-    fun probarConexion() {
-        viewModelScope.launch {
-            println("--- INICIANDO PRUEBA DE CONEXIÓN ---")
-
-
-            // Asumiendo que ya estás logueado y tienes cookies
-            val carga = repository.getCargaAcademica()
-            println("RESPUESTA CARGA: $carga")
-
-            println("--- FIN PRUEBA ---")
         }
     }
 }

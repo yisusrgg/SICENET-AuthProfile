@@ -3,24 +3,25 @@ package com.example.sicenet_authprofile.data.repository
 import android.content.Context
 import android.util.Log
 import com.example.sicenet_authprofile.data.model.LoginResponse
+import com.example.sicenet_authprofile.data.model.MateriaKardex
 import com.example.sicenet_authprofile.data.model.PerfilAcademico
-import com.example.sicenet_authprofile.data.model.UserProfile
 import com.example.sicenet_authprofile.data.network.SicenetService
-import com.example.sicenet_authprofile.data.network.cargaAcademicaRequest
+import com.example.sicenet_authprofile.data.network.cardexRequest
 import com.example.sicenet_authprofile.data.network.loginSoapTemplate
 import com.example.sicenet_authprofile.data.network.profileSoapRequest
+import com.example.sicenet_authprofile.data.network.SessionManager
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-
-import retrofit2.HttpException
-import java.io.IOException
 
 interface SicenetRepository {
     suspend fun login(user: String, password: String): LoginResponse
     suspend fun getUserProfile(cookie: String): PerfilAcademico?
     fun clearSession()
     suspend fun getCargaAcademica(): String?
+    suspend fun getKardex(lineamiento: String): List<MateriaKardex>? // Cambiado a List
+    suspend fun getCalifUnidades(): String?
+    suspend fun getCalifFinal(): String?
 }
 
 class SicenetRepositoryImpl(
@@ -29,32 +30,34 @@ class SicenetRepositoryImpl(
 ) : SicenetRepository {
 
     override suspend fun login(user: String, password: String): LoginResponse {
+        // Limpiamos sesión anterior al intentar login nuevo
+        SessionManager.clear()
+
         var retryCount = 0
         val max = 3
         while (max > retryCount) {
-            try{
+            try {
                 val soapBody = loginSoapTemplate.format(user, password)
                 val requestBody = soapBody.toRequestBody("text/xml; charset=utf-8".toMediaType())
                 val response = sicenetService.login(requestBody)
                 val responseString = response.string()
                 val result = extractTagValue(responseString, "accesoLoginResult")
-                //Log.d("SICENET_Envio", "XML enviado: $soapBody")
+
                 if (!responseString.trim().startsWith("<html>")) {
-                    return if (result != null && result.contains("\"acceso\":true", ignoreCase = true)
-                    ) {
-                        LoginResponse(true, "Cookie stored by interceptor", "Login exitoso")
+                    return if (result != null && result.contains("\"acceso\":true", ignoreCase = true)) {
+                        LoginResponse(true, SessionManager.authCookie, "Login exitoso")
                     } else {
-                        LoginResponse(false, null, "Credenciales incorrectas o error de servicio")
+                        LoginResponse(false, null, "Credenciales incorrectas")
                     }
                 }
-                retryCount++;
+                retryCount++
                 kotlinx.coroutines.delay(50)
             } catch (e: Exception) {
-                retryCount++;
+                retryCount++
                 if (retryCount >= max) return LoginResponse(false, null, e.message ?: "Error de red")
             }
         }
-        return LoginResponse(false, null, "El servidor no responde correctamente tras varios intentos")
+        return LoginResponse(false, null, "Error de servidor")
     }
 
     override suspend fun getUserProfile(cookie: String): PerfilAcademico? {
@@ -62,9 +65,9 @@ class SicenetRepositoryImpl(
             val requestBody = profileSoapRequest.toRequestBody("text/xml; charset=utf-8".toMediaType())
             val response = sicenetService.getProfile(requestBody)
             val responseString = response.string()
-            
+
             val jsonResult = extractTagValue(responseString, "getAlumnoAcademicoWithLineamientoResult")
-            println("body perfil: $jsonResult")
+
             if (jsonResult != null) {
                 val json = JSONObject(jsonResult)
                 PerfilAcademico(
@@ -88,29 +91,60 @@ class SicenetRepositoryImpl(
                 null
             }
         } catch (e: Exception) {
+            e.printStackTrace()
             null
         }
     }
 
-    override suspend fun getCargaAcademica(): String? {
+    override suspend fun getKardex(lineamiento: String): List<MateriaKardex>? {
+        // Validación: Si el lineamiento está vacío, usa "1" por defecto para evitar error 500
+        val lineamientoSeguro = if (lineamiento.trim().isEmpty()) "1" else lineamiento.trim()
+
         return try {
-            val requestBody = cargaAcademicaRequest.toRequestBody("text/xml; charset=utf-8".toMediaType())
-            val response = sicenetService.getCargaAcademica(requestBody)
-            val responseString = response.string()
-            Log.d("SICENET_RES", "Respuesta Servidor: $responseString")
-            val jsonResult = extractTagValue(responseString, "getCargaAcademicaByAlumnoResult")
-            jsonResult
+            val soapBody = cardexRequest.format(lineamientoSeguro)
+            val requestBody = soapBody.toRequestBody("text/xml; charset=utf-8".toMediaType())
 
-        } catch (e: HttpException) {
+            val response = sicenetService.getCardex(requestBody)
+            val responseString = response.string()
+
+            val jsonString = extractTagValue(responseString, "getAllKardexConPromedioByAlumnoResult")
+
+            if (jsonString != null) {
+                val listaMaterias = mutableListOf<MateriaKardex>()
+                val jsonArray = org.json.JSONArray(jsonString)
+
+                for (i in 0 until jsonArray.length()) {
+                    val item = jsonArray.getJSONObject(i)
+                    listaMaterias.add(
+                        MateriaKardex(
+                            clave = item.optString("clvMat"),
+                            nombre = item.optString("materia"),
+                            calificacion = item.optString("calif"),
+                            semestre = item.optString("periodo")
+                        )
+                    )
+                }
+                listaMaterias
+            } else {
+                null
+            }
+
+        } catch (e: Exception) {
+            Log.e("SICENET_ERROR", "Error Kardex: ${e.message}")
+            e.printStackTrace()
             null
         }
     }
+
+    // Métodos placeholder (vacíos por ahora)
+    override suspend fun getCargaAcademica(): String? = null
+    override suspend fun getCalifUnidades(): String? = null
+    override suspend fun getCalifFinal(): String? = null
 
     override fun clearSession() {
+        SessionManager.clear()
         context.getSharedPreferences("PREFS", Context.MODE_PRIVATE)
-            .edit()
-            .clear()
-            .apply() //.commit()
+            .edit().clear().apply()
     }
 
     private fun extractTagValue(xml: String, tag: String): String? {
@@ -118,7 +152,7 @@ class SicenetRepositoryImpl(
         val closeTag = "</$tag>"
         val startIndex = xml.indexOf(openTag)
         val endIndex = xml.indexOf(closeTag)
-        
+
         return if (startIndex != -1 && endIndex != -1) {
             xml.substring(startIndex + openTag.length, endIndex)
         } else {
@@ -126,7 +160,3 @@ class SicenetRepositoryImpl(
         }
     }
 }
-
-
-
-
