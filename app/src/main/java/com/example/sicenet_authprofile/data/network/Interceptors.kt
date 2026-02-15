@@ -40,7 +40,7 @@ class ReceivedCookiesInterceptor(private val context: Context) : Interceptor {
             context.getSharedPreferences("PREFS", Context.MODE_PRIVATE).edit(commit = true) {
                 clear()
                     .putStringSet("PREF_COOKIES", cookies)
-            }  //.apply()
+            }
         }
         return originalResponse
     }

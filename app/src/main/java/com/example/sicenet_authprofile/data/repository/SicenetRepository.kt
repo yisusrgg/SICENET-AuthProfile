@@ -33,12 +33,7 @@ class SicenetRepositoryImpl(
                 val response = sicenetService.login(requestBody)
                 val responseString = response.string()
                 val result = extractTagValue(responseString, "accesoLoginResult")
-                /*
-                Log.d("SICENET_Envio", "XML enviado: $soapBody")
-                //Log.d("SICENET_DEBUG:, $responseString") Wj8-f_E5
-                println("Verificando respuesta: $responseString")
-                println("RESULTRepo: $result")
-                */
+                //Log.d("SICENET_Envio", "XML enviado: $soapBody")
                 if (!responseString.trim().startsWith("<html>")) {
                     return if (result != null && result.contains("\"acceso\":true", ignoreCase = true)
                     ) {
