@@ -16,6 +16,10 @@ interface SicenetRepository {
     suspend fun login(user: String, password: String): LoginResponse
     suspend fun getUserProfile(cookie: String): PerfilAcademico?
     fun clearSession()
+    suspend fun getCargaAcademica(): String?
+    suspend fun getKardex(lineamiento: String): String? // El kardex suele pedir lineamiento
+    suspend fun getCalifUnidades(): String?
+    suspend fun getCalifFinal(): String?
 }
 
 class SicenetRepositoryImpl(
