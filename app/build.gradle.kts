@@ -48,6 +48,7 @@ dependencies {
     // Navigation
     implementation(libs.androidx.navigation.compose)
     implementation("androidx.navigation:navigation-compose:2.9.7")
+
     // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     
@@ -60,6 +61,9 @@ dependencies {
     //Room
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.room.ktx)
+
+    //Scalar
+    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

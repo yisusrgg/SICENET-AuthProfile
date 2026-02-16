@@ -9,6 +9,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.sicenet_authprofile.SicenetApplication
 import com.example.sicenet_authprofile.data.model.CalificacionFinal
 import com.example.sicenet_authprofile.data.model.CalificacionUnidad
+import com.example.sicenet_authprofile.data.model.CardexItem
 import com.example.sicenet_authprofile.data.model.PerfilAcademico
 import com.example.sicenet_authprofile.data.repository.SicenetRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +28,11 @@ sealed class ProfileUiState {
     object Loading : ProfileUiState()
     data class Success(val profile: PerfilAcademico) : ProfileUiState()
     data class Error(val message: String) : ProfileUiState()
+}
+sealed class CardexUiState {
+    object Loading : CardexUiState()
+    data class Success(val list: List<CardexItem>) : CardexUiState()
+    data class Error(val message: String) : CardexUiState()
 }
 
 sealed class CalifFinalUiState {
@@ -50,6 +56,9 @@ class SicenetViewModel(
 
     private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
+
+    private val _cardexState = MutableStateFlow<CardexUiState>(CardexUiState.Loading)
+    val cardexState: StateFlow<CardexUiState> = _cardexState.asStateFlow()
 
     private val _califFinalState = MutableStateFlow<CalifFinalUiState>(CalifFinalUiState.Loading)
     val califFinalState: StateFlow<CalifFinalUiState> = _califFinalState.asStateFlow()
@@ -77,6 +86,17 @@ class SicenetViewModel(
                 _profileState.value = ProfileUiState.Success(profile)
             } else {
                 _profileState.value = ProfileUiState.Error("No se pudo cargar el perfil")
+            }
+        }
+    }
+    fun getCardex(lineamiento: Int) {
+        viewModelScope.launch {
+            _cardexState.value = CardexUiState.Loading
+            val result = repository.getCardex(lineamiento)
+            if (result.isNotEmpty()) {
+                _cardexState.value = CardexUiState.Success(result)
+            } else {
+                _cardexState.value = CardexUiState.Error("No se encontraron datos o hubo un error")
             }
         }
     }
@@ -112,12 +132,6 @@ class SicenetViewModel(
                 val sicenetRepository = application.container.sicenetRepository
                 SicenetViewModel(repository = sicenetRepository)
             }
-        }
-    }
-
-    fun probarConexion() {
-        viewModelScope.launch {
-            repository.getCargaAcademica()
         }
     }
 }

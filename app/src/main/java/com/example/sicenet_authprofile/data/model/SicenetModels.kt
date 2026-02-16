@@ -56,3 +56,11 @@ data class CalificacionUnidad(
     val unidades: List<String> = emptyList(),
     val promedio: String = ""
 )
+
+data class CardexItem(
+    val materia: String,
+    val calificacion: String,
+    val semestre: String,
+    val creditos: String,
+    val estatus: String // Ej: Acreditada
+)

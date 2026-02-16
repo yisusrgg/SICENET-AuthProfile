@@ -4,11 +4,13 @@ import android.content.Context
 import android.util.Log
 import com.example.sicenet_authprofile.data.model.CalificacionFinal
 import com.example.sicenet_authprofile.data.model.CalificacionUnidad
+import com.example.sicenet_authprofile.data.model.CardexItem
 import com.example.sicenet_authprofile.data.model.LoginResponse
 import com.example.sicenet_authprofile.data.model.PerfilAcademico
 import com.example.sicenet_authprofile.data.network.SicenetService
 import com.example.sicenet_authprofile.data.network.califFinalRequest
 import com.example.sicenet_authprofile.data.network.califUnidadRequest
+import com.example.sicenet_authprofile.data.network.cardexRequest
 import com.example.sicenet_authprofile.data.network.cargaAcademicaRequest
 import com.example.sicenet_authprofile.data.network.loginSoapTemplate
 import com.example.sicenet_authprofile.data.network.profileSoapRequest
@@ -26,6 +28,7 @@ interface SicenetRepository {
     suspend fun getCargaAcademica(): String?
     suspend fun getCalificacionesFinales(modEducativo: Int): List<CalificacionFinal>
     suspend fun getCalificacionesUnidad(): List<CalificacionUnidad>
+    suspend fun getCardex(lineamiento: Int): List<CardexItem>
 }
 
 class SicenetRepositoryImpl(
@@ -92,6 +95,45 @@ class SicenetRepositoryImpl(
             }
         } catch (e: Exception) {
             null
+        }
+    }
+    override suspend fun getCardex(lineamiento: Int): List<CardexItem> {
+        return try {
+
+            val soapBody = cardexRequest.format(lineamiento)
+            val requestBody = soapBody.toRequestBody("text/xml; charset=utf-8".toMediaType())
+
+            val response = sicenetService.getCardex(requestBody)
+            val responseString = response.string()
+
+            val jsonResult = extractTagValue(responseString, "getAllKardexConPromedioByAlumnoResult")
+
+            if (jsonResult != null) {
+                val jsonObject = JSONObject(jsonResult)
+
+                val jsonArray = jsonObject.optJSONArray("lstKardex") ?: return emptyList()
+
+                val list = mutableListOf<CardexItem>()
+
+                for (i in 0 until jsonArray.length()) {
+                    val obj = jsonArray.getJSONObject(i)
+
+                    list.add(CardexItem(
+                        materia = obj.optString("Materia"),
+                        calificacion = obj.optString("Calif"),
+                        semestre = obj.optString("S1"),
+                        creditos = obj.optString("Cdts"),
+                        estatus = obj.optString("Acred")
+                    ))
+                }
+                list
+            } else {
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e("SICENET_CARDEX", "Error parseando cardex: ${e.message}")
+            e.printStackTrace()
+            emptyList()
         }
     }
 

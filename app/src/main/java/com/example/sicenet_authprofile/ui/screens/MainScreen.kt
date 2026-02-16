@@ -29,7 +29,12 @@ fun MainScreen(navController: NavHostController, cookie: String, viewModel: Sice
             composable("informacion") {
                 ProfileScreen(viewModel, cookie, onLogout = onLogout)
             }
-            composable("cardex") { CardexScreen() }
+            composable("cardex") {
+                CardexScreen(
+                    viewModel = viewModel,
+                    onLogout = onLogout
+                )
+            }
             composable("calificaciones") {
                 CalificacionesUnidadScreen(viewModel, onLogout = onLogout)
             }

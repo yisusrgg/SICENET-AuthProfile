@@ -118,7 +118,10 @@ fun HomeScreen(
             }
 
             composable("cardex") {
-                CardexScreen()
+                CardexScreen(
+                    viewModel = viewModel,
+                    onLogout = onLogout
+                )
             }
 
             composable("unidad") {
