@@ -1,6 +1,9 @@
 package com.example.sicenet_authprofile.data
 
 import android.content.Context
+import com.example.sicenet_authprofile.data.local.SicenetDatabase
+import com.example.sicenet_authprofile.data.local.repository.OfflineSicenetLocalRepository
+import com.example.sicenet_authprofile.data.local.repository.SicenetLocalRepository
 import com.example.sicenet_authprofile.data.network.AddCookiesInterceptor
 import com.example.sicenet_authprofile.data.network.ReceivedCookiesInterceptor
 import com.example.sicenet_authprofile.data.network.SicenetService
@@ -34,5 +37,15 @@ class DefaultAppContainer(private val context: Context) : AppContainer {
 
     override val sicenetRepository: SicenetRepository by lazy {
         SicenetRepositoryImpl(retrofitService, context)
+    }
+
+    // Agregar base de datos
+    private val sicenetDatabase by lazy {
+        SicenetDatabase.getDatabase(context)
+    }
+
+    // Inicializar Repo Local
+    override val sicenetLocalRepository: SicenetLocalRepository by lazy {
+        OfflineSicenetLocalRepository(sicenetDatabase.sicenetDao())
     }
 }

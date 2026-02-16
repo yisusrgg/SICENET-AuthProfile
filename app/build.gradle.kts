@@ -57,6 +57,10 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.androidx.compose.runtime.android)
 
+    //Room
+    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.androidx.room.ktx)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
