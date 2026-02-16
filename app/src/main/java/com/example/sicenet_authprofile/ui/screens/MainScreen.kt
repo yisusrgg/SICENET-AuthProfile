@@ -26,6 +26,9 @@ fun MainScreen(navController: NavHostController, cookie: String, viewModel: Sice
             startDestination = "informacion",
             modifier = Modifier.padding(innerPadding)
         ) {
+            composable ("carga"){
+                CargaAcademicaScreen(viewModel, onLogout)
+            }
             composable("informacion") {
                 ProfileScreen(viewModel, cookie, onLogout = onLogout)
             }

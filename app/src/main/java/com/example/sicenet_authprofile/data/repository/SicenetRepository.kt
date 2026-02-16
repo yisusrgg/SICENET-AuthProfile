@@ -6,6 +6,7 @@ import com.example.sicenet_authprofile.data.model.CalificacionFinal
 import com.example.sicenet_authprofile.data.model.CalificacionUnidad
 import com.example.sicenet_authprofile.data.model.CardexItem
 import com.example.sicenet_authprofile.data.model.LoginResponse
+import com.example.sicenet_authprofile.data.model.Materia
 import com.example.sicenet_authprofile.data.model.PerfilAcademico
 import com.example.sicenet_authprofile.data.network.SicenetService
 import com.example.sicenet_authprofile.data.network.califFinalRequest
@@ -25,7 +26,7 @@ interface SicenetRepository {
     suspend fun login(user: String, password: String): LoginResponse
     suspend fun getUserProfile(cookie: String): PerfilAcademico?
     fun clearSession()
-    suspend fun getCargaAcademica(): String?
+    suspend fun getCargaAcademica(): List<Materia>
     suspend fun getCalificacionesFinales(modEducativo: Int): List<CalificacionFinal>
     suspend fun getCalificacionesUnidad(): List<CalificacionUnidad>
     suspend fun getCardex(lineamiento: Int): List<CardexItem>
@@ -137,17 +138,37 @@ class SicenetRepositoryImpl(
         }
     }
 
-    override suspend fun getCargaAcademica(): String? {
+    override suspend fun getCargaAcademica(): List<Materia> {
         return try {
             val requestBody = cargaAcademicaRequest.toRequestBody("text/xml; charset=utf-8".toMediaType())
             val response = sicenetService.getCargaAcademica(requestBody)
             val responseString = response.string()
-            Log.d("SICENET_RES", "Respuesta Servidor (Carga): $responseString")
             val jsonResult = extractTagValue(responseString, "getCargaAcademicaByAlumnoResult")
-            jsonResult
 
-        } catch (e: HttpException) {
-            null
+            if (jsonResult != null) {
+                val jsonArray = JSONArray(jsonResult)
+                val list = mutableListOf<Materia>()
+                for (i in 0 until jsonArray.length()) {
+                    val obj = jsonArray.getJSONObject(i)
+                    list.add(Materia(
+                        materia = obj.optString("Materia"),
+                        docente = obj.optString("Docente"),
+                        grupo = obj.optString("Grupo"),
+                        creditosMateria = obj.optInt("CreditosMateria"),
+                        estadoMateria = obj.optString("EstadoMateria"),
+                        clvOficial = obj.optString("clvOficial"),
+                        lunes = obj.optString("Lunes"),
+                        martes = obj.optString("Martes"),
+                        miercoles = obj.optString("Miercoles"),
+                        jueves = obj.optString("Jueves"),
+                        viernes = obj.optString("Viernes"),
+                        sabado = obj.optString("Sabado")
+                    ))
+                }
+                list
+            } else emptyList()
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 

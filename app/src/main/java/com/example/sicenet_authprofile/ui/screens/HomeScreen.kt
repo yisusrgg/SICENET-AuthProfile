@@ -1,5 +1,6 @@
 package com.example.sicenet_authprofile.ui.screens
 
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -93,6 +95,7 @@ fun HomeScreen(
                     }
 
                     NavItem("informacion", Icons.Default.AccountCircle, "Info")
+                    NavItem("carga", Icons.Default.DateRange, "Carga")
                     NavItem("cardex", Icons.Default.Menu, "Cardex")
                     NavItem("unidad", Icons.AutoMirrored.Filled.List, "Unidad")
                     NavItem("final", Icons.Default.Star, "Final")
@@ -113,6 +116,13 @@ fun HomeScreen(
                 ProfileScreen(
                     viewModel = viewModel,
                     cookie = cookie,
+                    onLogout = onLogout
+                )
+            }
+
+            composable ("carga"){
+                CargaAcademicaScreen(
+                    viewModel=viewModel,
                     onLogout = onLogout
                 )
             }

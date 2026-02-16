@@ -10,6 +10,7 @@ import com.example.sicenet_authprofile.SicenetApplication
 import com.example.sicenet_authprofile.data.model.CalificacionFinal
 import com.example.sicenet_authprofile.data.model.CalificacionUnidad
 import com.example.sicenet_authprofile.data.model.CardexItem
+import com.example.sicenet_authprofile.data.model.Materia
 import com.example.sicenet_authprofile.data.model.PerfilAcademico
 import com.example.sicenet_authprofile.data.repository.SicenetRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +36,12 @@ sealed class CardexUiState {
     data class Error(val message: String) : CardexUiState()
 }
 
+sealed class CargaUiState {
+    object Loading : CargaUiState()
+    data class Success(val list: List<Materia>) : CargaUiState()
+    data class Error(val message: String) : CargaUiState()
+}
+
 sealed class CalifFinalUiState {
     object Loading : CalifFinalUiState()
     data class Success(val list: List<CalificacionFinal>) : CalifFinalUiState()
@@ -56,6 +63,9 @@ class SicenetViewModel(
 
     private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
+
+    private val _cargaState = MutableStateFlow<CargaUiState>(CargaUiState.Loading)
+    val cargaState: StateFlow<CargaUiState> = _cargaState.asStateFlow()
 
     private val _cardexState = MutableStateFlow<CardexUiState>(CardexUiState.Loading)
     val cardexState: StateFlow<CardexUiState> = _cardexState.asStateFlow()
@@ -97,6 +107,18 @@ class SicenetViewModel(
                 _cardexState.value = CardexUiState.Success(result)
             } else {
                 _cardexState.value = CardexUiState.Error("No se encontraron datos o hubo un error")
+            }
+        }
+    }
+
+    fun getCargaAcademica() { // Eliminamos matricula si el SOAP usa la cookie de sesión
+        viewModelScope.launch {
+            _cargaState.value = CargaUiState.Loading
+            try {
+                val result = repository.getCargaAcademica()
+                _cargaState.value = CargaUiState.Success(result)
+            } catch (e: Exception) {
+                _cargaState.value = CargaUiState.Error(e.message ?: "Error al cargar")
             }
         }
     }

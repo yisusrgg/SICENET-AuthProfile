@@ -59,8 +59,6 @@ dependencies {
     implementation(libs.androidx.compose.runtime.android)
 
     //Room
-    implementation(libs.androidx.room.common.jvm)
-    implementation(libs.androidx.room.ktx)
 
     //Scalar
     implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
