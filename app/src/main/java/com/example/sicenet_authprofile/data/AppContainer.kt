@@ -15,6 +15,7 @@ import retrofit2.converter.simplexml.SimpleXmlConverterFactory
 
 interface AppContainer {
     val sicenetRepository: SicenetRepository
+    val sicenetLocalRepository: SicenetLocalRepository
 }
 
 class DefaultAppContainer(private val context: Context) : AppContainer {

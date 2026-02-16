@@ -9,4 +9,5 @@ data class CargaAcademicaEntity(
     @PrimaryKey
     val matricula: String,
     val jsonContent: String,
+    val lastUpdate: Long = System.currentTimeMillis()
 )

@@ -11,11 +11,11 @@ import kotlinx.coroutines.flow.Flow
 interface SicenetDao {
 
     //CARGA ACADEMICA ------------------------------------------
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCarga(carga: CargaAcademicaEntity)
 
     //Traer la carga academica
     @Query("SELECT * FROM cargaAcademica WHERE matricula = :matricula")
-    fun getAllCarga(matricula : String): CargaAcademicaEntity?
+    suspend fun getAllCarga(matricula : String): CargaAcademicaEntity?
 
 }
