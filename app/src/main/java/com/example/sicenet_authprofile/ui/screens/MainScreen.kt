@@ -12,6 +12,12 @@ import com.example.sicenet_authprofile.ui.viewmodels.SicenetViewModel
 
 @Composable
 fun MainScreen(navController: NavHostController, cookie: String, viewModel: SicenetViewModel) {
+    val onLogout = {
+        navController.navigate("login") {
+            popUpTo(0) { inclusive = true }
+        }
+    }
+
     Scaffold(
         bottomBar = { BottomBar(navController) }
     ) { innerPadding ->
@@ -20,12 +26,16 @@ fun MainScreen(navController: NavHostController, cookie: String, viewModel: Sice
             startDestination = "informacion",
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("informacion") { ProfileScreen(viewModel, cookie, onLogout = {
-                navController.navigate("login") { popUpTo(0) }
-            }) }
+            composable("informacion") {
+                ProfileScreen(viewModel, cookie, onLogout = onLogout)
+            }
             composable("cardex") { CardexScreen() }
-            composable("calificaciones") { CalificacionesUnidadScreen(viewModel) }
-            composable("final") { CalificacionFinalScreen(viewModel) }
+            composable("calificaciones") {
+                CalificacionesUnidadScreen(viewModel, onLogout = onLogout)
+            }
+            composable("final") {
+                CalificacionFinalScreen(viewModel, onLogout = onLogout)
+            }
         }
     }
 }

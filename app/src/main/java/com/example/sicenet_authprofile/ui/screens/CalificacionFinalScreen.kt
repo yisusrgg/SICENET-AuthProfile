@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,9 +19,13 @@ import com.example.sicenet_authprofile.ui.viewmodels.ProfileUiState
 import com.example.sicenet_authprofile.ui.viewmodels.SicenetViewModel
 
 @Composable
-fun CalificacionFinalScreen(viewModel: SicenetViewModel) {
+fun CalificacionFinalScreen(
+    viewModel: SicenetViewModel,
+    onLogout: () -> Unit
+) {
     val state by viewModel.califFinalState.collectAsState()
     val profileState by viewModel.profileState.collectAsState()
+    val sicenetBlue = MaterialTheme.colorScheme.primary
 
     LaunchedEffect(profileState) {
         if (profileState is ProfileUiState.Success) {
@@ -28,23 +34,43 @@ fun CalificacionFinalScreen(viewModel: SicenetViewModel) {
     }
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // Header Verde con botón de Salir
         Surface(
-            color = MaterialTheme.colorScheme.primary,
+            color = sicenetBlue,
             contentColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "Calificaciones Finales",
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Calificaciones Finales",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                TextButton(
+                    onClick = onLogout,
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = "Salir",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("SALIR", fontWeight = FontWeight.Bold)
+                }
+            }
         }
 
         when (val califState = state) {
             is CalifFinalUiState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    CircularProgressIndicator(color = sicenetBlue)
                 }
             }
             is CalifFinalUiState.Success -> {
@@ -56,7 +82,7 @@ fun CalificacionFinalScreen(viewModel: SicenetViewModel) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primary
+                                containerColor = sicenetBlue
                             ),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                             shape = MaterialTheme.shapes.medium

@@ -122,11 +122,17 @@ fun HomeScreen(
             }
 
             composable("unidad") {
-                CalificacionesUnidadScreen(viewModel)
+                CalificacionesUnidadScreen(
+                    viewModel = viewModel,
+                    onLogout = onLogout
+                )
             }
 
             composable("final") {
-                CalificacionFinalScreen(viewModel)
+                CalificacionFinalScreen(
+                    viewModel = viewModel,
+                    onLogout = onLogout
+                )
             }
         }
     }

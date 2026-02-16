@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
@@ -22,7 +23,10 @@ import com.example.sicenet_authprofile.ui.viewmodels.CalifUnidadUiState
 import com.example.sicenet_authprofile.ui.viewmodels.SicenetViewModel
 
 @Composable
-fun CalificacionesUnidadScreen(viewModel: SicenetViewModel) {
+fun CalificacionesUnidadScreen(
+    viewModel: SicenetViewModel,
+    onLogout: () -> Unit
+) {
     val state by viewModel.califUnidadState.collectAsState()
     val sicenetBlue = MaterialTheme.colorScheme.primary
 
@@ -31,17 +35,37 @@ fun CalificacionesUnidadScreen(viewModel: SicenetViewModel) {
     }
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        // Header Verde con botón de Salir
         Surface(
             color = sicenetBlue,
             contentColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(
-                text = "Calificaciones Parciales",
-                modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Calificaciones Parciales",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                TextButton(
+                    onClick = onLogout,
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = "Salir",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("SALIR", fontWeight = FontWeight.Bold)
+                }
+            }
         }
 
         when (val califState = state) {
