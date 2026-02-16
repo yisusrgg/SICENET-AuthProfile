@@ -1,6 +1,7 @@
 package com.example.sicenet_authprofile.data
 
 import android.content.Context
+import com.example.sicenet_authprofile.data.local.SicenetDatabase
 import com.example.sicenet_authprofile.data.network.AddCookiesInterceptor
 import com.example.sicenet_authprofile.data.network.ReceivedCookiesInterceptor
 import com.example.sicenet_authprofile.data.network.SicenetService
@@ -17,27 +18,26 @@ interface AppContainer {
 class DefaultAppContainer(private val context: Context) : AppContainer {
     private val baseUrl = "https://sicenet.surguanajuato.tecnm.mx/"
 
-    //Configuración del cliente OkHttp con tus Interceptores de Cookies
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(AddCookiesInterceptor(context))
         .addInterceptor(ReceivedCookiesInterceptor(context))
         .build()
 
-    //Configuración de Retrofit
     private val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl(baseUrl)
         .addConverterFactory(SimpleXmlConverterFactory.createNonStrict())
         .client(okHttpClient)
         .build()
 
-    //Crear el servicio
     private val retrofitService: SicenetService by lazy {
         retrofit.create(SicenetService::class.java)
     }
 
-    override val sicenetRepository: SicenetRepository by lazy {
-        SicenetRepositoryImpl(retrofitService, context)
+    private val database: SicenetDatabase by lazy {
+        SicenetDatabase.getDatabase(context)
     }
 
-
+    override val sicenetRepository: SicenetRepository by lazy {
+        SicenetRepositoryImpl(retrofitService, database.sicenetDao(), context)
+    }
 }
