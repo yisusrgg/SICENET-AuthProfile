@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -31,13 +31,10 @@ fun HomeScreen(
 
     val navController = rememberNavController()
 
-    val currentRoute =
-        navController.currentBackStackEntryAsState().value?.destination?.route
-
     Scaffold(
         bottomBar = {
-            val currentRoute =
-                navController.currentBackStackEntryAsState().value?.destination?.route
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
 
             fun navigate(route: String) {
                 navController.navigate(route) {
@@ -97,7 +94,7 @@ fun HomeScreen(
 
                     NavItem("informacion", Icons.Default.AccountCircle, "Info")
                     NavItem("cardex", Icons.Default.Menu, "Cardex")
-                    NavItem("unidad", Icons.Default.List, "Unidad")
+                    NavItem("unidad", Icons.AutoMirrored.Filled.List, "Unidad")
                     NavItem("final", Icons.Default.Star, "Final")
                 }
             }
@@ -125,11 +122,11 @@ fun HomeScreen(
             }
 
             composable("unidad") {
-                CalificacionesUnidadScreen()
+                CalificacionesUnidadScreen(viewModel)
             }
 
             composable("final") {
-                CalificacionFinalScreen()
+                CalificacionFinalScreen(viewModel)
             }
         }
     }

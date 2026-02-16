@@ -5,6 +5,7 @@ data class LoginResponse(
     val cookie: String? = null,
     val message: String? = null
 )
+
 data class UserProfile(
     val nombre: String = "",
     val matricula: String = "",
@@ -12,6 +13,7 @@ data class UserProfile(
     val situacion: String = "",
     val promedio: String = ""
 )
+
 data class PerfilAcademico(
     val fechaReins: String,
     val modEducativo: Int,
@@ -30,4 +32,13 @@ data class PerfilAcademico(
     val matricula: String
 )
 
+data class CalificacionFinal(
+    val materia: String = "",
+    val calificacion: String = ""
+)
 
+data class CalificacionUnidad(
+    val materia: String = "",
+    val unidades: List<String> = emptyList(),
+    val promedio: String = ""
+)

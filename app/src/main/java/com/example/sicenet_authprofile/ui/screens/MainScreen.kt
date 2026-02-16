@@ -24,8 +24,8 @@ fun MainScreen(navController: NavHostController, cookie: String, viewModel: Sice
                 navController.navigate("login") { popUpTo(0) }
             }) }
             composable("cardex") { CardexScreen() }
-            composable("calificaciones") { CalificacionesUnidadScreen() }
-            composable("final") { CalificacionFinalScreen() }
+            composable("calificaciones") { CalificacionesUnidadScreen(viewModel) }
+            composable("final") { CalificacionFinalScreen(viewModel) }
         }
     }
 }

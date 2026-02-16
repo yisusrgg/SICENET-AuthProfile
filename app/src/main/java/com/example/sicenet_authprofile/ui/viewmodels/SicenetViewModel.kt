@@ -7,14 +7,14 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.sicenet_authprofile.SicenetApplication
-import com.example.sicenet_authprofile.data.model.UserProfile
+import com.example.sicenet_authprofile.data.model.CalificacionFinal
+import com.example.sicenet_authprofile.data.model.CalificacionUnidad
+import com.example.sicenet_authprofile.data.model.PerfilAcademico
 import com.example.sicenet_authprofile.data.repository.SicenetRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import com.example.sicenet_authprofile.data.model.PerfilAcademico
-
 
 sealed class LoginUiState {
     object Idle : LoginUiState()
@@ -29,6 +29,18 @@ sealed class ProfileUiState {
     data class Error(val message: String) : ProfileUiState()
 }
 
+sealed class CalifFinalUiState {
+    object Loading : CalifFinalUiState()
+    data class Success(val list: List<CalificacionFinal>) : CalifFinalUiState()
+    data class Error(val message: String) : CalifFinalUiState()
+}
+
+sealed class CalifUnidadUiState {
+    object Loading : CalifUnidadUiState()
+    data class Success(val list: List<CalificacionUnidad>) : CalifUnidadUiState()
+    data class Error(val message: String) : CalifUnidadUiState()
+}
+
 class SicenetViewModel(
     private val repository: SicenetRepository
 ) : ViewModel() {
@@ -39,11 +51,16 @@ class SicenetViewModel(
     private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 
+    private val _califFinalState = MutableStateFlow<CalifFinalUiState>(CalifFinalUiState.Loading)
+    val califFinalState: StateFlow<CalifFinalUiState> = _califFinalState.asStateFlow()
+
+    private val _califUnidadState = MutableStateFlow<CalifUnidadUiState>(CalifUnidadUiState.Loading)
+    val califUnidadState: StateFlow<CalifUnidadUiState> = _califUnidadState.asStateFlow()
+
     fun login(user: String, pass: String) {
         viewModelScope.launch {
             _loginState.value = LoginUiState.Loading
             val result = repository.login(user, pass)
-            println("Result de VM: $result")
             if (result.success && result.cookie != null) {
                 _loginState.value = LoginUiState.Success(result.cookie)
             } else {
@@ -63,10 +80,28 @@ class SicenetViewModel(
             }
         }
     }
+
+    fun getCalificacionesFinales(modEducativo: Int) {
+        viewModelScope.launch {
+            _califFinalState.value = CalifFinalUiState.Loading
+            val result = repository.getCalificacionesFinales(modEducativo)
+            _califFinalState.value = CalifFinalUiState.Success(result)
+        }
+    }
+
+    fun getCalificacionesUnidad() {
+        viewModelScope.launch {
+            _califUnidadState.value = CalifUnidadUiState.Loading
+            val result = repository.getCalificacionesUnidad()
+            _califUnidadState.value = CalifUnidadUiState.Success(result)
+        }
+    }
     
     fun resetLoginState() {
         _loginState.value = LoginUiState.Idle
         _profileState.value = ProfileUiState.Loading
+        _califFinalState.value = CalifFinalUiState.Loading
+        _califUnidadState.value = CalifUnidadUiState.Loading
         repository.clearSession()
     }
 
@@ -80,17 +115,9 @@ class SicenetViewModel(
         }
     }
 
-
     fun probarConexion() {
         viewModelScope.launch {
-            println("--- INICIANDO PRUEBA DE CONEXIÓN ---")
-
-
-            // Asumiendo que ya estás logueado y tienes cookies
-            val carga = repository.getCargaAcademica()
-            println("RESPUESTA CARGA: $carga")
-
-            println("--- FIN PRUEBA ---")
+            repository.getCargaAcademica()
         }
     }
 }

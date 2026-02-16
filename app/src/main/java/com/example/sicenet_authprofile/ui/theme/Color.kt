@@ -2,10 +2,13 @@ package com.example.sicenet_authprofile.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Nuevos Colores Institucionales solicitados
+val SicenetGeneralGreen = Color(0xFF4CB050) // Verde para cosas en general
+val SicenetButtonGreen = Color(0xFF378E3D)  // Verde para resaltar (botones)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val SicenetOnPrimary = Color.White       
+val SicenetOnSecondary = Color.White     
+val SicenetBackground = Color.White      
+val SicenetSurface = Color.White         
+val SicenetOnSurface = Color(0xFF1C1B1F) 
+val SicenetError = Color(0xFFB00020)
