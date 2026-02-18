@@ -30,6 +30,13 @@ interface SicenetRepository {
     suspend fun refreshCalificacionesUnidad()
     suspend fun refreshCardex(lineamiento: Int)
     suspend fun refreshCargaAcademica()
+
+    // One-shot Remote Fetch Methods (Added to fix ViewModel errors)
+    suspend fun getUserProfile(cookie: String): PerfilAcademico?
+    suspend fun getCardex(lineamiento: Int): List<CardexItem>
+    suspend fun getCalificacionesFinales(modEducativo: Int): List<CalificacionFinal>
+    suspend fun getCalificacionesUnidad(): List<CalificacionUnidad>
+    suspend fun getCargaAcademica(): List<Materia>
 }
 
 class SicenetRepositoryImpl(
@@ -119,13 +126,17 @@ class SicenetRepositoryImpl(
     }
 
     override suspend fun refreshProfile(cookie: String) {
+        getUserProfile(cookie)
+    }
+
+    override suspend fun getUserProfile(cookie: String): PerfilAcademico? {
         try {
             val requestBody = profileSoapRequest.toRequestBody("text/xml; charset=utf-8".toMediaType())
             val response = sicenetService.getProfile(requestBody)
             val jsonResult = extractTagValue(response.string(), "getAlumnoAcademicoWithLineamientoResult")
             if (jsonResult != null) {
                 val json = JSONObject(jsonResult)
-                val entity = PerfilEntity(
+                val profile = PerfilAcademico(
                     matricula = json.optString("matricula"),
                     nombre = json.optString("nombre"),
                     carrera = json.optString("carrera"),
@@ -142,14 +153,37 @@ class SicenetRepositoryImpl(
                     adeudoDescripcion = json.optString("adeudoDescripcion"),
                     lineamiento = json.optInt("lineamiento")
                 )
+                val entity = PerfilEntity(
+                    matricula = profile.matricula,
+                    nombre = profile.nombre,
+                    carrera = profile.carrera,
+                    especialidad = profile.especialidad,
+                    semActual = profile.semActual,
+                    cdtosAcumulados = profile.cdtosAcumulados,
+                    cdtosActuales = profile.cdtosActuales,
+                    estatus = profile.estatus,
+                    inscrito = profile.inscrito,
+                    adeudo = profile.adeudo,
+                    fechaReins = profile.fechaReins,
+                    modEducativo = profile.modEducativo,
+                    urlFoto = profile.urlFoto,
+                    adeudoDescripcion = profile.adeudoDescripcion,
+                    lineamiento = profile.lineamiento
+                )
                 sicenetDao.insertPerfil(entity)
+                return profile
             }
         } catch (e: Exception) {
-            Log.e("SICENET_REPO", "Error refreshProfile: ${e.message}")
+            Log.e("SICENET_REPO", "Error getUserProfile: ${e.message}")
         }
+        return null
     }
 
     override suspend fun refreshCalificacionesFinales(modEducativo: Int) {
+        getCalificacionesFinales(modEducativo)
+    }
+
+    override suspend fun getCalificacionesFinales(modEducativo: Int): List<CalificacionFinal> {
         try {
             val soapBody = califFinalRequest.format(modEducativo)
             val requestBody = soapBody.toRequestBody("text/xml; charset=utf-8".toMediaType())
@@ -157,29 +191,37 @@ class SicenetRepositoryImpl(
             val jsonResult = extractTagValue(response.string(), "getAllCalifFinalByAlumnosResult")
             if (jsonResult != null) {
                 val jsonArray = JSONArray(jsonResult)
+                val list = mutableListOf<CalificacionFinal>()
                 val entities = mutableListOf<CalificacionFinalEntity>()
                 for (i in 0 until jsonArray.length()) {
                     val obj = jsonArray.getJSONObject(i)
-                    entities.add(CalificacionFinalEntity(
-                        materia = obj.optString("Materia", obj.optString("materia")),
-                        calificacion = obj.optString("Calif", obj.optString("calif"))
-                    ))
+                    val materia = obj.optString("Materia", obj.optString("materia"))
+                    val calif = obj.optString("Calif", obj.optString("calif"))
+                    list.add(CalificacionFinal(materia, calif))
+                    entities.add(CalificacionFinalEntity(materia = materia, calificacion = calif))
                 }
                 sicenetDao.deleteCalificacionesFinales()
                 sicenetDao.insertCalificacionesFinales(entities)
+                return list
             }
         } catch (e: Exception) {
-            Log.e("SICENET_REPO", "Error refreshCalificacionesFinales: ${e.message}")
+            Log.e("SICENET_REPO", "Error getCalificacionesFinales: ${e.message}")
         }
+        return emptyList()
     }
 
     override suspend fun refreshCalificacionesUnidad() {
+        getCalificacionesUnidad()
+    }
+
+    override suspend fun getCalificacionesUnidad(): List<CalificacionUnidad> {
         try {
             val requestBody = califUnidadRequest.toRequestBody("text/xml; charset=utf-8".toMediaType())
             val response = sicenetService.getCalifUnidad(requestBody)
             val jsonResult = extractTagValue(response.string(), "getCalifUnidadesByAlumnoResult")
             if (jsonResult != null) {
                 val jsonArray = JSONArray(jsonResult)
+                val list = mutableListOf<CalificacionUnidad>()
                 val entities = mutableListOf<CalificacionUnidadEntity>()
                 for (i in 0 until jsonArray.length()) {
                     val obj = jsonArray.getJSONObject(i)
@@ -192,17 +234,25 @@ class SicenetRepositoryImpl(
                     }
                     val validGrades = unidades.mapNotNull { it.toIntOrNull() }
                     val promedio = if (validGrades.isNotEmpty()) validGrades.average().toInt().toString() else "0"
+                    
+                    list.add(CalificacionUnidad(materia, unidades, promedio))
                     entities.add(CalificacionUnidadEntity(materia = materia, unidades = unidades, promedio = promedio))
                 }
                 sicenetDao.deleteCalificacionesUnidades()
                 sicenetDao.insertCalificacionesUnidades(entities)
+                return list
             }
         } catch (e: Exception) {
-            Log.e("SICENET_REPO", "Error refreshCalificacionesUnidad: ${e.message}")
+            Log.e("SICENET_REPO", "Error getCalificacionesUnidad: ${e.message}")
         }
+        return emptyList()
     }
 
     override suspend fun refreshCardex(lineamiento: Int) {
+        getCardex(lineamiento)
+    }
+
+    override suspend fun getCardex(lineamiento: Int): List<CardexItem> {
         try {
             val soapBody = cardexRequest.format(lineamiento)
             val requestBody = soapBody.toRequestBody("text/xml; charset=utf-8".toMediaType())
@@ -210,37 +260,53 @@ class SicenetRepositoryImpl(
             val jsonResult = extractTagValue(response.string(), "getAllKardexConPromedioByAlumnoResult")
             if (jsonResult != null) {
                 val jsonObject = JSONObject(jsonResult)
-                val jsonArray = jsonObject.optJSONArray("lstKardex") ?: return
+                val jsonArray = jsonObject.optJSONArray("lstKardex") ?: return emptyList()
+                val list = mutableListOf<CardexItem>()
                 val entities = mutableListOf<CardexEntity>()
                 for (i in 0 until jsonArray.length()) {
                     val obj = jsonArray.getJSONObject(i)
-                    entities.add(CardexEntity(
+                    val item = CardexItem(
                         materia = obj.optString("Materia"),
                         calificacion = obj.optString("Calif"),
                         semestre = obj.optString("S1"),
                         creditos = obj.optString("Cdts"),
                         estatus = obj.optString("Acred")
+                    )
+                    list.add(item)
+                    entities.add(CardexEntity(
+                        materia = item.materia,
+                        calificacion = item.calificacion,
+                        semestre = item.semestre,
+                        creditos = item.creditos,
+                        estatus = item.estatus
                     ))
                 }
                 sicenetDao.deleteCardex()
                 sicenetDao.insertCardex(entities)
+                return list
             }
         } catch (e: Exception) {
-            Log.e("SICENET_REPO", "Error refreshCardex: ${e.message}")
+            Log.e("SICENET_REPO", "Error getCardex: ${e.message}")
         }
+        return emptyList()
     }
 
     override suspend fun refreshCargaAcademica() {
+        getCargaAcademica()
+    }
+
+    override suspend fun getCargaAcademica(): List<Materia> {
         try {
             val requestBody = cargaAcademicaRequest.toRequestBody("text/xml; charset=utf-8".toMediaType())
             val response = sicenetService.getCargaAcademica(requestBody)
             val jsonResult = extractTagValue(response.string(), "getCargaAcademicaByAlumnoResult")
             if (jsonResult != null) {
                 val jsonArray = JSONArray(jsonResult)
+                val list = mutableListOf<Materia>()
                 val entities = mutableListOf<MateriaEntity>()
                 for (i in 0 until jsonArray.length()) {
                     val obj = jsonArray.getJSONObject(i)
-                    entities.add(MateriaEntity(
+                    val materia = Materia(
                         clvOficial = obj.optString("clvOficial"),
                         docente = obj.optString("Docente"),
                         materia = obj.optString("Materia"),
@@ -253,20 +319,35 @@ class SicenetRepositoryImpl(
                         jueves = obj.optString("Jueves"),
                         viernes = obj.optString("Viernes"),
                         sabado = obj.optString("Sabado")
+                    )
+                    list.add(materia)
+                    entities.add(MateriaEntity(
+                        clvOficial = materia.clvOficial,
+                        docente = materia.docente,
+                        materia = materia.materia,
+                        grupo = materia.grupo,
+                        creditosMateria = materia.creditosMateria,
+                        estadoMateria = materia.estadoMateria,
+                        lunes = materia.lunes,
+                        martes = materia.martes,
+                        miercoles = materia.miercoles,
+                        jueves = materia.jueves,
+                        viernes = materia.viernes,
+                        sabado = materia.sabado
                     ))
                 }
                 sicenetDao.deleteCargaAcademica()
                 sicenetDao.insertCargaAcademica(entities)
+                return list
             }
         } catch (e: Exception) {
-            Log.e("SICENET_REPO", "Error refreshCargaAcademica: ${e.message}")
+            Log.e("SICENET_REPO", "Error getCargaAcademica: ${e.message}")
         }
+        return emptyList()
     }
 
     override fun clearSession() {
         context.getSharedPreferences("PREFS", Context.MODE_PRIVATE).edit().clear().apply()
-        // Opcional: limpiar DB al cerrar sesión
-        // kotlinx.coroutines.MainScope().launch { sicenetDao.clearAllData() }
     }
 
     private fun extractTagValue(xml: String, tag: String): String? {
