@@ -1,5 +1,6 @@
 package com.example.sicenet_authprofile.ui.screens
 
+import android.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
@@ -39,7 +41,6 @@ fun CargaAcademicaScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        // --- HEADER ---
         Surface(color = sicenetBlue, contentColor = Color.White) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -47,8 +48,17 @@ fun CargaAcademicaScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Mi Horario", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                IconButton(onClick = onLogout) {
-                    Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Salir", tint = Color.White)
+                TextButton(
+                    onClick = onLogout,
+                    colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                        contentDescription = "Salir",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("SALIR", fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -152,6 +162,16 @@ fun HorarioItem(materia: Materia, horario: String) {
                         color = Color.Gray
                     )
                 }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.Gray)
+                    Spacer(Modifier.width(5.dp))
+                    Text(
+                        text = materia.docente,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
+
             }
         }
     }
