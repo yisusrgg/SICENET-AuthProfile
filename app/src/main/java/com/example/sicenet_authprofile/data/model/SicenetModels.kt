@@ -41,7 +41,6 @@ data class Materia(
     val creditosMateria: Int,
     val materia: String,
     val grupo: String,
-
     // Horario
     val lunes: String,
     val martes: String,

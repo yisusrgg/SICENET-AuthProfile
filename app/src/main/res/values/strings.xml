@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">SICENET-AuthProfile</string>
+    <string name="iniciando_sesion">Iniciando sesión</string>
+    <string name="guardar_datos">Guardando datos localmente</string>
 </resources>

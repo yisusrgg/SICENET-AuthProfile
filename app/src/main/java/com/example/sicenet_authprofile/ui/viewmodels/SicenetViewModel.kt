@@ -14,8 +14,10 @@ import com.example.sicenet_authprofile.data.model.Materia
 import com.example.sicenet_authprofile.data.model.PerfilAcademico
 import com.example.sicenet_authprofile.data.repository.SicenetRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 sealed class LoginUiState {
@@ -25,34 +27,6 @@ sealed class LoginUiState {
     data class Error(val message: String) : LoginUiState()
 }
 
-sealed class ProfileUiState {
-    object Loading : ProfileUiState()
-    data class Success(val profile: PerfilAcademico) : ProfileUiState()
-    data class Error(val message: String) : ProfileUiState()
-}
-sealed class CardexUiState {
-    object Loading : CardexUiState()
-    data class Success(val list: List<CardexItem>) : CardexUiState()
-    data class Error(val message: String) : CardexUiState()
-}
-
-sealed class CargaUiState {
-    object Loading : CargaUiState()
-    data class Success(val list: List<Materia>) : CargaUiState()
-    data class Error(val message: String) : CargaUiState()
-}
-
-sealed class CalifFinalUiState {
-    object Loading : CalifFinalUiState()
-    data class Success(val list: List<CalificacionFinal>) : CalifFinalUiState()
-    data class Error(val message: String) : CalifFinalUiState()
-}
-
-sealed class CalifUnidadUiState {
-    object Loading : CalifUnidadUiState()
-    data class Success(val list: List<CalificacionUnidad>) : CalifUnidadUiState()
-    data class Error(val message: String) : CalifUnidadUiState()
-}
 
 class SicenetViewModel(
     private val repository: SicenetRepository
@@ -61,20 +35,21 @@ class SicenetViewModel(
     private val _loginState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val loginState: StateFlow<LoginUiState> = _loginState.asStateFlow()
 
-    private val _profileState = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
-    val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 
-    private val _cargaState = MutableStateFlow<CargaUiState>(CargaUiState.Loading)
-    val cargaState: StateFlow<CargaUiState> = _cargaState.asStateFlow()
+    val profileState = repository.getProfileFromDb()
+        .stateIn(viewModelScope, SharingStarted.Lazily, null)
 
-    private val _cardexState = MutableStateFlow<CardexUiState>(CardexUiState.Loading)
-    val cardexState: StateFlow<CardexUiState> = _cardexState.asStateFlow()
+    val cargaState = repository.getCargaAcademicaFromDb()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    private val _califFinalState = MutableStateFlow<CalifFinalUiState>(CalifFinalUiState.Loading)
-    val califFinalState: StateFlow<CalifFinalUiState> = _califFinalState.asStateFlow()
+    val cardexState = repository.getCardexFromDb()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    private val _califUnidadState = MutableStateFlow<CalifUnidadUiState>(CalifUnidadUiState.Loading)
-    val califUnidadState: StateFlow<CalifUnidadUiState> = _califUnidadState.asStateFlow()
+    val califFinalState = repository.getCalificacionesFinalesFromDb()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    val califUnidadState = repository.getCalificacionesUnidadFromDb()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun login(user: String, pass: String) {
         viewModelScope.launch {
@@ -82,68 +57,46 @@ class SicenetViewModel(
             val result = repository.login(user, pass)
             if (result.success && result.cookie != null) {
                 _loginState.value = LoginUiState.Success(result.cookie)
+                //El repository manda llamar los workers
+                sincronizarPerfil()
             } else {
                 _loginState.value = LoginUiState.Error(result.message ?: "Error desconocido")
             }
         }
     }
-
-    fun getProfile(cookie: String) {
-        viewModelScope.launch {
-            _profileState.value = ProfileUiState.Loading
-            val profile = repository.getUserProfile(cookie)
-            if (profile != null) {
-                _profileState.value = ProfileUiState.Success(profile)
-            } else {
-                _profileState.value = ProfileUiState.Error("No se pudo cargar el perfil")
-            }
-        }
+    fun sincronizarPerfil(){
+        repository.sincronizarDato(tipoSync = "PERFIL", lineamiento = 0, modEducativo = 0)
     }
-    fun getCardex(lineamiento: Int) {
-        viewModelScope.launch {
-            _cardexState.value = CardexUiState.Loading
-            val result = repository.getCardex(lineamiento)
-            if (result.isNotEmpty()) {
-                _cardexState.value = CardexUiState.Success(result)
-            } else {
-                _cardexState.value = CardexUiState.Error("No se encontraron datos o hubo un error")
-            }
+
+    fun sincronizarCargaAcademica() {
+        repository.sincronizarDato("CARGA_ACADEMICA", 0, 0)
+    }
+
+    fun sincronizarCardex(){
+        val perfilActual = profileState.value
+        if (perfilActual != null) {
+            val lineamiento = perfilActual.lineamiento
+            repository.sincronizarDato("CARDEX", lineamiento, 0)
+        } else {
+            //_profileState.value = ProfileUiState.Error("No se pudo cargar el perfil")
         }
     }
 
-    fun getCargaAcademica() { // Eliminamos matricula si el SOAP usa la cookie de sesión
-        viewModelScope.launch {
-            _cargaState.value = CargaUiState.Loading
-            try {
-                val result = repository.getCargaAcademica()
-                _cargaState.value = CargaUiState.Success(result)
-            } catch (e: Exception) {
-                _cargaState.value = CargaUiState.Error(e.message ?: "Error al cargar")
-            }
+    fun sincronizarCalificacionesUnidad() {
+        repository.sincronizarDato("CALIF_UNIDAD", 0, 0)
+    }
+
+    fun sincronizarCalificacionesFinales() {
+        val perfilActual = profileState.value
+        if (perfilActual != null) {
+            val modEducativo = perfilActual.modEducativo
+            repository.sincronizarDato("CALIF_FINAL", 0, modEducativo)
         }
     }
 
-    fun getCalificacionesFinales(modEducativo: Int) {
-        viewModelScope.launch {
-            _califFinalState.value = CalifFinalUiState.Loading
-            val result = repository.getCalificacionesFinales(modEducativo)
-            _califFinalState.value = CalifFinalUiState.Success(result)
-        }
-    }
 
-    fun getCalificacionesUnidad() {
-        viewModelScope.launch {
-            _califUnidadState.value = CalifUnidadUiState.Loading
-            val result = repository.getCalificacionesUnidad()
-            _califUnidadState.value = CalifUnidadUiState.Success(result)
-        }
-    }
-    
     fun resetLoginState() {
         _loginState.value = LoginUiState.Idle
-        _profileState.value = ProfileUiState.Loading
-        _califFinalState.value = CalifFinalUiState.Loading
-        _califUnidadState.value = CalifUnidadUiState.Loading
         repository.clearSession()
     }
 

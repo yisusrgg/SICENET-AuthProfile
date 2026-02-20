@@ -14,8 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.sicenet_authprofile.ui.viewmodels.CalifFinalUiState
-import com.example.sicenet_authprofile.ui.viewmodels.ProfileUiState
 import com.example.sicenet_authprofile.ui.viewmodels.SicenetViewModel
 
 @Composable
@@ -24,13 +22,10 @@ fun CalificacionFinalScreen(
     onLogout: () -> Unit
 ) {
     val state by viewModel.califFinalState.collectAsState()
-    val profileState by viewModel.profileState.collectAsState()
     val sicenetBlue = MaterialTheme.colorScheme.primary
 
-    LaunchedEffect(profileState) {
-        if (profileState is ProfileUiState.Success) {
-            viewModel.getCalificacionesFinales((profileState as ProfileUiState.Success).profile.modEducativo)
-        }
+    LaunchedEffect(Unit) {
+        viewModel.sincronizarCalificacionesFinales()
     }
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -67,54 +62,47 @@ fun CalificacionFinalScreen(
             }
         }
 
-        when (val califState = state) {
-            is CalifFinalUiState.Loading -> {
+
+        if(state.isEmpty()){
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = sicenetBlue)
                 }
-            }
-            is CalifFinalUiState.Success -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(califState.list) { calif ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(
-                                containerColor = sicenetBlue
-                            ),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                            shape = MaterialTheme.shapes.medium
+        }else{
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(state) { calif ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = sicenetBlue
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        shape = MaterialTheme.shapes.medium
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = calif.materia.uppercase(),
-                                    modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = calif.calificacion,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 18.sp,
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
-                            }
+                            Text(
+                                text = calif.materia.uppercase(),
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = calif.calificacion,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
                         }
                     }
-                }
-            }
-            is CalifFinalUiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Error: ${califState.message}", color = MaterialTheme.colorScheme.error)
                 }
             }
         }
