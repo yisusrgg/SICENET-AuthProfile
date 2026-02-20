@@ -199,6 +199,7 @@ class SicenetRepositoryImpl (
             val requestBody = soapBody.toRequestBody("text/xml; charset=utf-8".toMediaType())
             val response = sicenetService.getCardex(requestBody)
             val jsonResult = extractTagValue(response.string(), "getAllKardexConPromedioByAlumnoResult")
+            Log.d("KARDEX", jsonResult.toString())
             return jsonResult
         } catch (e: Exception) {
             Log.e("SICENET_REPO", "Error getCardex: ${e.message}")

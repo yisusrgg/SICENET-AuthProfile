@@ -14,8 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.sicenet_authprofile.ui.viewmodels.CardexUiState
-import com.example.sicenet_authprofile.ui.viewmodels.ProfileUiState
 import com.example.sicenet_authprofile.ui.viewmodels.SicenetViewModel
 
 @Composable
@@ -24,14 +22,11 @@ fun CardexScreen(
     onLogout: () -> Unit
 ) {
     val cardexState by viewModel.cardexState.collectAsState()
-    val profileState by viewModel.profileState.collectAsState()
+    //val profileState by viewModel.profileState.collectAsState()
     val sicenetBlue = MaterialTheme.colorScheme.primary
 
-    LaunchedEffect(profileState) {
-        if (profileState is ProfileUiState.Success) {
-            val lineamiento = (profileState as ProfileUiState.Success).profile.lineamiento
-            viewModel.getCardex(lineamiento)
-        }
+    LaunchedEffect(Unit) {
+        viewModel.sincronizarCardex()
     }
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -70,25 +65,18 @@ fun CardexScreen(
         }
 
         //content
-        when (val state = cardexState) {
-            is CardexUiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = sicenetBlue)
-                }
+        if(cardexState.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = sicenetBlue)
             }
-            is CardexUiState.Success -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    items(state.list) { item ->
-                        CardexItemRow(item, sicenetBlue)
-                    }
-                }
-            }
-            is CardexUiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
+        }
+        else{
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(cardexState) { item ->
+                    CardexItemRow(item, sicenetBlue)
                 }
             }
         }

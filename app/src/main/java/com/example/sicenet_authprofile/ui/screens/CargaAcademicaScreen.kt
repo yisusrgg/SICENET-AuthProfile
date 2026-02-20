@@ -20,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sicenet_authprofile.data.model.Materia
-import com.example.sicenet_authprofile.ui.viewmodels.CargaUiState
 import com.example.sicenet_authprofile.ui.viewmodels.SicenetViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,7 +36,7 @@ fun CargaAcademicaScreen(
     val diasSemana = listOf("LUNES", "MARTES", "MIERCOLES", "JUEVES", "VIERNES", "SABADO")
 
     LaunchedEffect(Unit) {
-        viewModel.getCargaAcademica()
+        viewModel.sincronizarCargaAcademica()
     }
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -63,58 +62,50 @@ fun CargaAcademicaScreen(
             }
         }
 
-        when (val carga = state) {
-            is CargaUiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = sicenetBlue)
+        if(state.isEmpty()){
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = sicenetBlue)
+            }
+        }else{
+            val materias = state ?: emptyList()
+
+            // --- EL "CINTURÓN" (TABS DE DÍAS) ---
+            ScrollableTabRow(
+                selectedTabIndex = selectedTabIndex,
+                containerColor = sicenetBlue,
+                contentColor = Color.White,
+                edgePadding = 16.dp,
+                indicator = { tabPositions ->
+                    TabRowDefaults.SecondaryIndicator(
+                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                        color = Color.White
+                    )
+                }
+            ) {
+                diasSemana.forEachIndexed { index, dia ->
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        text = { Text(dia, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                    )
                 }
             }
-            is CargaUiState.Success -> {
-                val materias = carga.list ?: emptyList()
 
-                // --- EL "CINTURÓN" (TABS DE DÍAS) ---
-                ScrollableTabRow(
-                    selectedTabIndex = selectedTabIndex,
-                    containerColor = sicenetBlue,
-                    contentColor = Color.White,
-                    edgePadding = 16.dp,
-                    indicator = { tabPositions ->
-                        TabRowDefaults.SecondaryIndicator(
-                            Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                            color = Color.White
-                        )
-                    }
+            // Filtrar materias según el día seleccionado
+            val materiasDelDia = filtrarMateriasPorDia(materias, selectedTabIndex)
+
+            if (materiasDelDia.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No tienes clases este día.", color = Color.Gray)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    diasSemana.forEachIndexed { index, dia ->
-                        Tab(
-                            selected = selectedTabIndex == index,
-                            onClick = { selectedTabIndex = index },
-                            text = { Text(dia, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
-                        )
+                    items(materiasDelDia) { item ->
+                        HorarioItem(item.first, item.second) // materia y el horario específico
                     }
-                }
-
-                // Filtrar materias según el día seleccionado
-                val materiasDelDia = filtrarMateriasPorDia(materias, selectedTabIndex)
-
-                if (materiasDelDia.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No tienes clases este día.", color = Color.Gray)
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize().padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(materiasDelDia) { item ->
-                            HorarioItem(item.first, item.second) // materia y el horario específico
-                        }
-                    }
-                }
-            }
-            is CargaUiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Error: ${carga.message}", color = MaterialTheme.colorScheme.error)
                 }
             }
         }

@@ -19,7 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.sicenet_authprofile.data.model.CalificacionUnidad
-import com.example.sicenet_authprofile.ui.viewmodels.CalifUnidadUiState
 import com.example.sicenet_authprofile.ui.viewmodels.SicenetViewModel
 
 @Composable
@@ -31,7 +30,7 @@ fun CalificacionesUnidadScreen(
     val sicenetBlue = MaterialTheme.colorScheme.primary
 
     LaunchedEffect(Unit) {
-        viewModel.getCalificacionesUnidad()
+        viewModel.sincronizarCalificacionesUnidad()
     }
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -68,25 +67,17 @@ fun CalificacionesUnidadScreen(
             }
         }
 
-        when (val califState = state) {
-            is CalifUnidadUiState.Loading -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = sicenetBlue)
-                }
+        if(state.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = sicenetBlue)
             }
-            is CalifUnidadUiState.Success -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(califState.list) { calif ->
-                        SubjectAccordion(calif, sicenetBlue)
-                    }
-                }
-            }
-            is CalifUnidadUiState.Error -> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Error: ${califState.message}", color = MaterialTheme.colorScheme.error)
+        }else{
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(state) { calif ->
+                    SubjectAccordion(calif, sicenetBlue)
                 }
             }
         }

@@ -13,7 +13,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.sicenet_authprofile.ui.viewmodels.ProfileUiState
 import com.example.sicenet_authprofile.ui.viewmodels.SicenetViewModel
 
 @Composable
@@ -23,11 +22,11 @@ fun ProfileScreen(
     onLogout: () -> Unit
 ) {
     val profileState by viewModel.profileState.collectAsState()
+    //val sharedPrefs = context.getSharedPreferences("SICENET_PREFS", Context.MODE_PRIVATE)
+    //val ultimaFecha = sharedPrefs.getString("FECHA_ACT_PERFIL", "Sin sincronizar") ?: "Sin sincronizar"
 
-    LaunchedEffect(profileState) {
-        if (profileState !is ProfileUiState.Success) {
-            viewModel.getProfile(cookie)
-        }
+    LaunchedEffect(Unit) {
+        viewModel.sincronizarPerfil()
     }
 
     Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -64,55 +63,57 @@ fun ProfileScreen(
             }
         }
 
+        /*Text(
+            text = "Última actualización: $ultimaFecha",
+            style = MaterialTheme.typography.labelMedium,
+            color = Color.Gray,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, top = 8.dp)
+        )*/
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            when (val state = profileState) {
-                is ProfileUiState.Loading -> {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                    }
+            if(profileState == null) {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
-
-                is ProfileUiState.Success -> {
+            }else{
+                profileState?.let { profile ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            ProfileItem("Nombre", state.profile.nombre)
-                            ProfileItem("Matrícula", state.profile.matricula)
-                            ProfileItem("Carrera", state.profile.carrera)
-                            ProfileItem("Especialidad", state.profile.especialidad)
-                            ProfileItem("Semestre actual", state.profile.semActual.toString())
+                            ProfileItem("Nombre", profile.nombre)
+                            ProfileItem("Matrícula", profile.matricula)
+                            ProfileItem("Carrera", profile.carrera)
+                            ProfileItem("Especialidad", profile.especialidad)
+                            ProfileItem("Semestre actual", profile.semActual.toString())
                             ProfileItem(
                                 "Créditos acumulados",
-                                state.profile.cdtosAcumulados.toString()
+                                profile.cdtosAcumulados.toString()
                             )
-                            ProfileItem("Créditos actuales", state.profile.cdtosActuales.toString())
-                            ProfileItem("Estatus", state.profile.estatus)
-                            ProfileItem("Inscrito", if (state.profile.inscrito) "Sí" else "No")
-                            ProfileItem("Adeudo", if (state.profile.adeudo) "Sí" else "No")
-                            ProfileItem("Fecha reinscripción", state.profile.fechaReins)
+                            ProfileItem("Créditos actuales", profile.cdtosActuales.toString())
+                            ProfileItem("Estatus", profile.estatus)
+                            ProfileItem("Inscrito", if (profile.inscrito) "Sí" else "No")
+                            ProfileItem("Adeudo", if (profile.adeudo) "Sí" else "No")
+                            ProfileItem("Fecha reinscripción", profile.fechaReins)
                             ProfileItem(
                                 "Modalidad educativa",
-                                state.profile.modEducativo.toString()
+                                profile.modEducativo.toString()
                             )
-                            ProfileItem("Lineamiento", state.profile.lineamiento.toString())
+                            ProfileItem("Lineamiento", profile.lineamiento.toString())
                         }
                     }
                 }
-
-                is ProfileUiState.Error -> {
-                    Text(text = state.message, color = MaterialTheme.colorScheme.error)
-                }
+                Spacer(modifier = Modifier.height(24.dp))
             }
-            
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

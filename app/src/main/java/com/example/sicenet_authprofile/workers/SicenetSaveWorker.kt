@@ -7,6 +7,7 @@ import com.example.sicenet_authprofile.R
 import com.example.sicenet_authprofile.SicenetApplication
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -25,9 +26,15 @@ class SicenetSaveWorker(
                 val application = applicationContext as SicenetApplication
                 val repository = application.container.sicenetRepository
 
-                //Datos de entrada (JSON y tipo que nos mandó el FetchPerfilWorker)
-                val jsonData = inputData.getString("JSON_DATA") ?: return@withContext Result.failure()
+                //Datos de entrada (ruta del archivo y tipo que nos mandó el FetchPerfilWorker)
+                val filePath = inputData.getString("FILE_PATH") ?: return@withContext Result.failure()
                 val tipoSync = inputData.getString("TIPO_SYNC") ?: return@withContext Result.failure()
+
+                // Lectura del archivo temporal
+                val file = File(filePath)
+                if (!file.exists()) return@withContext Result.failure()
+                val jsonData = file.readText() // Saca el texto
+                file.delete() //Se borra para no dejar basura
 
                 //Guardar en la base de datos local
                 when(tipoSync){

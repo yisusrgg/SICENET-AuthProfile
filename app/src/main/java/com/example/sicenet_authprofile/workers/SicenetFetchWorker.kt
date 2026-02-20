@@ -8,6 +8,7 @@ import com.example.sicenet_authprofile.R
 import com.example.sicenet_authprofile.SicenetApplication
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 
 class SicenetFetchWorker(
     ctx: Context,
@@ -26,7 +27,7 @@ class SicenetFetchWorker(
                 // Datos de entrada
                 val tipoSync = inputData.getString("TIPO_SYNC") ?: return@withContext Result.failure() //("PERFIL", "CARGA_ACADEMICA", etc)
                 val lineamiento = inputData.getInt("LINEAMIENTO",0)
-                val modEducatico = inputData.getInt("MODEDUCATIVO",1)
+                val modEducatico = inputData.getInt("MOD_EDUCATIVO",1)
 
                 //Descargar del json
                 val jsonDescargado = when (tipoSync) {
@@ -43,10 +44,15 @@ class SicenetFetchWorker(
                     return@withContext Result.failure()
                 }
 
-                //Pasar el json y el tipo de tabla al siguiente worker
+                //Convertir json a  archivo temporla en la memoria para no pasar el
+                // limite de 10KB de workManager y mejor pasar la ruta
+                val tempFile = File(applicationContext.cacheDir, "temp_$tipoSync.json")
+                tempFile.writeText(jsonDescargado)
+
+                //Pasar el json y la ruta del archivo temporalal siguiente worker
                 val output = workDataOf(
                     "TIPO_SYNC" to tipoSync,
-                    "JSON_DATA" to jsonDescargado
+                    "FILE_PATH" to tempFile.absolutePath
                 )
                 Result.success(output)
 
