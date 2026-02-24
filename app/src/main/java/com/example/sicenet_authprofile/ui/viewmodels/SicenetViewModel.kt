@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -37,7 +39,7 @@ class SicenetViewModel(
 
 
     val profileState = repository.getProfileFromDb()
-        .stateIn(viewModelScope, SharingStarted.Lazily, null)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     val cargaState = repository.getCargaAcademicaFromDb()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
@@ -51,19 +53,40 @@ class SicenetViewModel(
     val califUnidadState = repository.getCalificacionesUnidadFromDb()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    init {
+        // Observar el perfil para disparar sincronizaciones que dependen de él (Cardex y Calif Finales)
+        // una vez que el perfil esté disponible en la DB local.
+        viewModelScope.launch {
+            profileState.filterNotNull().collectLatest { perfil ->
+                // Cuando el perfil se cargue/actualice en la DB, disparamos las sincronizaciones dependientes
+                // si es que no tienen datos o queremos asegurar que estén frescas.
+                repository.sincronizarDato("CARDEX", perfil.lineamiento, 0)
+                repository.sincronizarDato("CALIF_FINAL", 0, perfil.modEducativo)
+            }
+        }
+    }
+
     fun login(user: String, pass: String) {
         viewModelScope.launch {
             _loginState.value = LoginUiState.Loading
             val result = repository.login(user, pass)
             if (result.success && result.cookie != null) {
                 _loginState.value = LoginUiState.Success(result.cookie)
-                //El repository manda llamar los workers
-                sincronizarPerfil()
+                // Iniciamos la sincronización de todo lo que no depende de parámetros del perfil
+                sincronizarDatosIniciales()
             } else {
                 _loginState.value = LoginUiState.Error(result.message ?: "Error desconocido")
             }
         }
     }
+
+    private fun sincronizarDatosIniciales() {
+        // Estas peticiones no necesitan lineamiento ni modEducativo (o usan valores por defecto internos)
+        sincronizarPerfil()
+        sincronizarCargaAcademica()
+        sincronizarCalificacionesUnidad()
+    }
+
     fun sincronizarPerfil(){
         repository.sincronizarDato(tipoSync = "PERFIL", lineamiento = 0, modEducativo = 0)
     }
@@ -77,8 +100,6 @@ class SicenetViewModel(
         if (perfilActual != null) {
             val lineamiento = perfilActual.lineamiento
             repository.sincronizarDato("CARDEX", lineamiento, 0)
-        } else {
-            //_profileState.value = ProfileUiState.Error("No se pudo cargar el perfil")
         }
     }
 
