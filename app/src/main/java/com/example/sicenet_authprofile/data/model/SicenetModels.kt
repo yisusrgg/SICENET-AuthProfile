@@ -61,5 +61,5 @@ data class CardexItem(
     val calificacion: String,
     val semestre: String,
     val creditos: String,
-    val estatus: String // Ej: Acreditada
+    val estatus: String
 )
