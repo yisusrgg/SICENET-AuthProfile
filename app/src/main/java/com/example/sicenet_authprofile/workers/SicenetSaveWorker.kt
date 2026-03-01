@@ -17,10 +17,6 @@ class SicenetSaveWorker(
     params: WorkerParameters
 ): CoroutineWorker(ctx, params){
     override suspend fun doWork(): Result {
-        /*makeStatusNotification(
-            applicationContext.resources.getString(R.string.guardar_datos),
-            applicationContext
-        )*/
         return withContext(Dispatchers.IO) {
             return@withContext try {
                 val application = applicationContext as SicenetApplication

@@ -1,5 +1,6 @@
 package com.example.sicenet_authprofile.ui.screens
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.sicenet_authprofile.ui.viewmodels.SicenetViewModel
@@ -18,12 +20,17 @@ import com.example.sicenet_authprofile.ui.viewmodels.SicenetViewModel
 @Composable
 fun ProfileScreen(
     viewModel: SicenetViewModel,
-    cookie: String,
     onLogout: () -> Unit
 ) {
     val profileState by viewModel.profileState.collectAsState()
-    //val sharedPrefs = context.getSharedPreferences("SICENET_PREFS", Context.MODE_PRIVATE)
-    //val ultimaFecha = sharedPrefs.getString("FECHA_ACT_PERFIL", "Sin sincronizar") ?: "Sin sincronizar"
+    val context = LocalContext.current
+    val sharedPrefs = context.getSharedPreferences("SICENET_PREFS", Context.MODE_PRIVATE)
+    var ultimaFecha by remember{
+        mutableStateOf(sharedPrefs.getString("FECHA_ACT_PERFIL", "Sin sincronizar"))
+    }
+    LaunchedEffect(profileState) {
+        ultimaFecha = sharedPrefs.getString("FECHA_ACT_PERFIL", "Sin sincronizar") ?: "Sin sincronizar"
+    }
 
     LaunchedEffect(Unit) {
         viewModel.sincronizarPerfil()
@@ -63,14 +70,14 @@ fun ProfileScreen(
             }
         }
 
-        /*Text(
+        Text(
             text = "Última actualización: $ultimaFecha",
             style = MaterialTheme.typography.labelMedium,
             color = Color.Gray,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, top = 8.dp)
-        )*/
+                .padding(start = 16.dp, end = 16.dp, top = 8.dp)
+        )
 
         Column(
             modifier = Modifier

@@ -72,7 +72,6 @@ class SicenetViewModel(
             val result = repository.login(user, pass)
             if (result.success && result.cookie != null) {
                 _loginState.value = LoginUiState.Success(result.cookie)
-                // Iniciamos la sincronización de todo lo que no depende de parámetros del perfil
                 sincronizarDatosIniciales()
             } else {
                 _loginState.value = LoginUiState.Error(result.message ?: "Error desconocido")
@@ -81,7 +80,6 @@ class SicenetViewModel(
     }
 
     private fun sincronizarDatosIniciales() {
-        // Estas peticiones no necesitan lineamiento ni modEducativo (o usan valores por defecto internos)
         sincronizarPerfil()
         sincronizarCargaAcademica()
         sincronizarCalificacionesUnidad()

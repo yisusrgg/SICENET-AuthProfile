@@ -26,7 +26,6 @@ import com.example.sicenet_authprofile.ui.viewmodels.SicenetViewModel
 
 @Composable
 fun HomeScreen(
-    cookie: String,
     viewModel: SicenetViewModel,
     onLogout: () -> Unit
 ) {
@@ -115,7 +114,6 @@ fun HomeScreen(
             composable("informacion") {
                 ProfileScreen(
                     viewModel = viewModel,
-                    cookie = cookie,
                     onLogout = onLogout
                 )
             }
